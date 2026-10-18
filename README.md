@@ -1,10 +1,10 @@
 # C.F. Mechanical — Business Discovery & Growth Workspace
 
-This is a professional, mobile-friendly two-partner planning portal for **C.F. Mechanical, LLC**. It is designed to collect Christian Okoh's and the business-development partner's views **before** defining strategy and SMART goals. It intentionally does not use the language of a trial, legal agreement, or employee assessment.
+This is a professional, mobile-friendly two-partner planning portal for **C.F. Mechanical, LLC**. It is designed to collect Christian Okoh's and Debynyhan Banks's views **before** defining strategy and SMART goals. It intentionally does not use the language of a trial, legal agreement, or employee assessment.
 
 ## What is built
 
-- 35 discovery questions in eight topics, with individual answers for each partner
+- 36 discovery questions in eight topics, with individual answers for each partner
 - A side-by-side alignment report identifying shared priorities, differences and open questions
 - Five shared-decision topics with independent partner selections
 - An editable 13-week Gantt chart with proposed tasks, owners, weeks, statuses, dependencies and completion evidence
@@ -18,7 +18,7 @@ There are no finalized SMART goals yet. The starting Gantt chart is **clearly la
 
 ## Quick preview (no account needed)
 
-Run `npm ci` and `npm run dev`, then open the displayed local URL. The included `public/portal-config.js` points to the C.F. Mechanical Supabase project using its public application key. To test without a cloud account, temporarily clear both connection values: the portal then runs in **local preview** mode. Switch between Christian and Business Development at the top to test both sets of answers. All preview data is saved in that browser only.
+Run `npm ci` and `npm run dev`, then open the displayed local URL. The included `public/portal-config.js` points to the C.F. Mechanical Supabase project using its public application key. To test without a cloud account, temporarily clear both connection values: the portal then runs in **local preview** mode. Switch between Christian and Debynyhan Banks at the top to test both sets of answers. All preview data is saved in that browser only.
 
 **The preview is not shared between devices.** Do not send it to the partner and assume their answers will synchronize. Each browser would have its own isolated local storage.
 
@@ -44,7 +44,7 @@ Run `npm ci` and `npm run dev`, then open the displayed local URL. The included 
 
 ## Recommended first session
 
-Christian fills out his discovery questionnaire. Business Development fills out their questionnaire separately. Compare results in Alignment, work through Decision Log, and revise the first 13-week roadmap together. Choose estimating software based on actual bidding needs and budget. Establish measurable SMART goals **after** the discovery responses are discussed.
+Christian fills out his discovery questionnaire. Debynyhan Banks fills out their questionnaire separately. Compare results in Alignment, work through Decision Log, and revise the first 13-week roadmap together. Choose estimating software based on actual bidding needs and budget. Establish measurable SMART goals **after** the discovery responses are discussed.
 
 ## Files
 

@@ -109,7 +109,7 @@ begin
   insert into public.workspaces(name,created_by) values(trim(p_name),auth.uid()) returning id into v_workspace;
   insert into public.workspace_members(workspace_id,user_id,seat,display_name,role)
   values (v_workspace,auth.uid(),p_seat,
-    case when p_seat='christian' then 'Christian Okoh' else 'Business Development Partner' end,'owner');
+    case when p_seat='christian' then 'Christian Okoh' else 'Debynyhan Banks' end,'owner');
   return v_workspace;
 end;
 $$;
@@ -134,7 +134,7 @@ begin
     raise exception 'This workspace already has two members'; end if;
   insert into public.workspace_members(workspace_id,user_id,seat,display_name,role)
    values(v_invite.workspace_id,auth.uid(),v_invite.seat,
-     case when v_invite.seat='christian' then 'Christian Okoh' else 'Business Development Partner' end,'member');
+     case when v_invite.seat='christian' then 'Christian Okoh' else 'Debynyhan Banks' end,'member');
   update public.workspace_invitations set accepted_at=now() where id=v_invite.id;
   return true;
 end;
