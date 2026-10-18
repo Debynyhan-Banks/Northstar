@@ -1,52 +1,68 @@
-# C.F. Mechanical — Business & Website Discovery
+# C.F. Mechanical — Business Discovery & Growth Workspace
 
-A mobile-friendly guided questionnaire created for the owner of C.F. Mechanical. This repository uses the existing Vinext build.
+This is a professional, mobile-friendly two-partner planning portal for **C.F. Mechanical, LLC**. It is designed to collect Christian Okoh's and the business-development partner's views **before** defining strategy and SMART goals. It intentionally does not use the language of a trial, legal agreement, or employee assessment.
 
-## Preview locally
+## What is built
 
-Run `npm install` and `npm run dev`, then open the local URL in Chrome, Safari, Edge, or Firefox. The wizard has 9 steps (welcome, 7 topics, review), answer cards, automatic saving in the same browser, review, downloadable readable TXT or structured JSON responses, and Print / Save PDF.
+- 35 discovery questions in eight topics, with individual answers for each partner
+- A side-by-side alignment report identifying shared priorities, differences and open questions
+- Five shared-decision topics with independent partner selections
+- An editable 13-week Gantt chart with proposed tasks, owners, weeks, statuses, dependencies and completion evidence
+- A shared task board, task comments, weekly progress updates and recent activity log
+- A **real** bid-lead pipeline (initially empty, not filled with fictitious contracts)
+- A company facts page identifying license **50350**, owner **Christian Okoh**, and reported expiration **October 17, 2027** (all to be verified before public use)
+- JSON backup/export (and local-preview import)
+- Optional private two-account Supabase backend and authenticated sync
 
-## Publish as a website
+There are no finalized SMART goals yet. The starting Gantt chart is **clearly labeled provisional**. Both partners first answer questions, discuss strategy and then confirm specific targets.
 
-Verify the target hosting project and its build and deployment settings before
-publishing this Cloudflare-compatible Vinext application. The original ZIP also includes a standalone `index.html` and
-`config.js` suitable for Cloudflare Pages Direct Upload.
+## Quick preview (no account needed)
 
-## Receive submissions directly (important)
+Run `npm ci` and `npm run dev`, then open the displayed local URL. The included `public/portal-config.js` points to the C.F. Mechanical Supabase project using its public application key. To test without a cloud account, temporarily clear both connection values: the portal then runs in **local preview** mode. Switch between Christian and Business Development at the top to test both sets of answers. All preview data is saved in that browser only.
 
-The site will NOT automatically send completed answers until you connect a submission provider. To connect a Formspree form:
+**The preview is not shared between devices.** Do not send it to the partner and assume their answers will synchronize. Each browser would have its own isolated local storage.
 
-1. Create a Formspree form in an account under your control and verify its destination mailbox. Review its privacy, retention, and plan limits before sending confidential content.
-2. Copy the endpoint, e.g. `https://formspree.io/f/xxxxx`.
-3. Put it in `public/config.js`:
-   `window.CF_FORM_ENDPOINT = 'https://formspree.io/f/xxxxx';`
-4. Redeploy the application and **test** by submitting a non-sensitive sample. Confirm it reaches the correct mailbox.
-5. Share the link privately with the owner. Submissions use HTTPS after deployment. Avoid recording secrets or sensitive identifiers.
+## Make the portal private and shared between two users
 
-Without an endpoint, the final button downloads a readable text summary. Your partner can attach that file to an email/text and send it privately; the page never claims it was submitted.
+1. Use the dedicated C.F. Mechanical Supabase project. Email confirmation and email/password sign-in are enabled, and its default site URL is configured. Configure custom SMTP before inviting a partner whose email is not a member of the Supabase organization: the default Supabase email sender cannot deliver confirmations to other addresses.
+2. The schema in `database/supabase-schema.sql` has been installed in that project. It creates tables, Row Level Security (RLS), and secure workspace create/join functions. Run it only when setting up a new empty project; it is not a repeatable migration.
+3. `public/portal-config.js` contains the project URL and **publishable key**. These values are intentionally public in client-side apps. **Never use the service-role/secret key in browser code.**
+4. Deploy the Vinext application through its existing hosting pipeline and serve it via HTTPS. The SQL file is source only and is not a public asset.
+5. First partner creates an account and confirms email, signs in, selects their identity, and **creates the C.F. Mechanical workspace**.
+6. That account opens **Workspace → Invite the second partner**, enters their email, and creates the invitation. This records an invitation in the private database; it **does not send an email automatically**. Send the website URL separately.
+7. The second partner registers with the **same invited email**, confirms email, signs in and chooses **Join my invitation**. Each partner's account is tied to their own role, and they cannot edit the other's discovery answers or decision selections.
+8. The portal checks for shared updates automatically every 20 seconds. Use the **Refresh shared data** button to refresh immediately.
 
-## Data and privacy
+### Deployment caveats
 
-* This application does not include access control. Anyone with its URL can open the questionnaire unless hosting access controls are configured.
-* A draft is saved in localStorage on the device and browser the partner uses. It does not automatically sync between devices or users.
-* The code does not use analytics, cookies, or external scripts. Hosting and any connected form provider may have their own logs/processing.
-* Do not request or enter banking credentials, SSNs, or confidential customer/project drawings in this intake.
-* Some partnership and cash-flow answers are sensitive business information. Share only through controlled channels.
-* The form is an information-gathering tool; it does not create ownership rights, certify licensing or establish union signatory status.
+- This is a functional **starter application**, not yet a hosted production deployment. Complete email delivery and two-account testing before deploying it for shared use.
+- RLS protects the workspace data; do not disable it. The provided SQL enforces exactly two named seats and binds discovery answers/votes to the authenticated account. Owner invitations require an exact matching **verified** email address.
+- The system does not send email, integrate external bid portals, host project files, or include construction estimating engines. It tracks those workstreams.
+- A public website for customer marketing is a **separate future deliverable**. This workspace is intended for private collaboration.
+- No service worker or advanced offline sync is installed. Use the JSON backup capability for independent copies of your planning records.
+- For a high-sensitivity or regulated deployment, add security review, reliable audit logging, backup/restore policy, and accessibility QA before putting confidential financial documents into the app.
 
-## Customize
+## Recommended first session
 
-Modify `sections` in `app/intake-wizard.js` to change questions, option labels, service categories, or order. The local draft key is `cf-mechanical-intake-v1`; if you alter option values substantially, change the key to `v2` to prevent stale selections.
+Christian fills out his discovery questionnaire. Business Development fills out their questionnaire separately. Compare results in Alignment, work through Decision Log, and revise the first 13-week roadmap together. Choose estimating software based on actual bidding needs and budget. Establish measurable SMART goals **after** the discovery responses are discussed.
 
-## Proposed follow-up
+## Files
 
-After receiving the answers, use them to create a formal two-founder operating plan: vision, positioning, service scope, GC target list, bid-readiness checklist, capital plan, partnership proposal, website brief, and 90-day launch schedule.
+- `app/Questionnaire.tsx` and `app/growth-workspace.js` – application entry and logic
+- `app/globals.css` – responsive interface
+- `public/portal-config.js` – public frontend connection configuration
+- `database/supabase-schema.sql` – private, two-user database schema and policies
+- `public/previous/` – previous questionnaire, available to recover drafts stored by the same browser
+- `README.md` – configuration/deployment guide
 
-## Development in this repository
+## Scope and factual caveat
 
-This repository preserves the existing Cloudflare-compatible Vinext build.
-Run `npm install`, then `npm run dev` for local development. Run `npm test`
-to build and check the server-rendered page. The questionnaire logic is in
-`app/intake-wizard.js`; configure the optional submission endpoint in
-`public/config.js`. Verify the target hosting configuration before deploying the built application. The standalone ZIP's direct-upload instructions apply to its
-original `index.html` and `config.js`, not to this Vinext source tree.
+Company facts are from information supplied by the business partners. The site does not independently certify the Ohio license or its classification. Verify license status, insurance, signatory arrangements, and project-financing capability before bidding or advertising specific trade work. The workspace is not a legal partnership agreement.
+
+## Existing questionnaire drafts
+
+The previous questionnaire remains available at `/previous/`. Its draft is stored locally on each browser; open that link on the original device to review or download it. The new workspace does not automatically import those answers.
+
+## Important shared-mode limitations
+
+Do not use the preview for real shared collaboration. Shared mode requires a configured Supabase project, verified accounts, two-person access testing, and successful synchronization testing before use. Concurrent edits of the same task or opportunity currently use last-writer-wins behavior. Keep JSON backups of important workspace data.
