@@ -18,15 +18,15 @@ There are no finalized SMART goals yet. The starting Gantt chart is **clearly la
 
 ## Quick preview (no account needed)
 
-Run `npm ci` and `npm run dev`, then open the displayed local URL. `public/portal-config.js` deliberately has empty cloud credentials, so the portal runs in **local preview** mode. Switch between Christian and Business Development at the top to test both sets of answers. All preview data is saved in that browser only.
+Run `npm ci` and `npm run dev`, then open the displayed local URL. The included `public/portal-config.js` points to the C.F. Mechanical Supabase project using its public application key. To test without a cloud account, temporarily clear both connection values: the portal then runs in **local preview** mode. Switch between Christian and Business Development at the top to test both sets of answers. All preview data is saved in that browser only.
 
 **The preview is not shared between devices.** Do not send it to the partner and assume their answers will synchronize. Each browser would have its own isolated local storage.
 
 ## Make the portal private and shared between two users
 
-1. Create a new Supabase project at https://supabase.com. Enable **email confirmation** under Authentication settings and allow email/password sign-ins. Configure its permitted site/redirect URL for your domain.
-2. Open Supabase SQL Editor and execute `database/supabase-schema.sql`. This creates tables, Row Level Security (RLS), roles, and secure workspace create/join functions.
-3. Under Supabase Project Settings / API, copy the project URL and **publishable/anon key** into the values in `public/portal-config.js`. These values are intentionally public in client-side apps. **Never use the service-role/secret key in browser code.**
+1. Use the dedicated C.F. Mechanical Supabase project. Email confirmation and email/password sign-in are enabled, and its default site URL is configured. Configure custom SMTP before inviting a partner whose email is not a member of the Supabase organization: the default Supabase email sender cannot deliver confirmations to other addresses.
+2. The schema in `database/supabase-schema.sql` has been installed in that project. It creates tables, Row Level Security (RLS), and secure workspace create/join functions. Run it only when setting up a new empty project; it is not a repeatable migration.
+3. `public/portal-config.js` contains the project URL and **publishable key**. These values are intentionally public in client-side apps. **Never use the service-role/secret key in browser code.**
 4. Deploy the Vinext application through its existing hosting pipeline and serve it via HTTPS. The SQL file is source only and is not a public asset.
 5. First partner creates an account and confirms email, signs in, selects their identity, and **creates the C.F. Mechanical workspace**.
 6. That account opens **Workspace → Invite the second partner**, enters their email, and creates the invitation. This records an invitation in the private database; it **does not send an email automatically**. Send the website URL separately.
@@ -35,7 +35,7 @@ Run `npm ci` and `npm run dev`, then open the displayed local URL. `public/porta
 
 ### Deployment caveats
 
-- This is a functional **starter application**, not a hosted production deployment. You must supply the Supabase project and deploy the files before cross-device sharing is available.
+- This is a functional **starter application**, not yet a hosted production deployment. Complete email delivery and two-account testing before deploying it for shared use.
 - RLS protects the workspace data; do not disable it. The provided SQL enforces exactly two named seats and binds discovery answers/votes to the authenticated account. Owner invitations require an exact matching **verified** email address.
 - The system does not send email, integrate external bid portals, host project files, or include construction estimating engines. It tracks those workstreams.
 - A public website for customer marketing is a **separate future deliverable**. This workspace is intended for private collaboration.
@@ -50,7 +50,7 @@ Christian fills out his discovery questionnaire. Business Development fills out 
 
 - `app/Questionnaire.tsx` and `app/growth-workspace.js` – application entry and logic
 - `app/globals.css` – responsive interface
-- `public/portal-config.js` – empty public frontend connection configuration
+- `public/portal-config.js` – public frontend connection configuration
 - `database/supabase-schema.sql` – private, two-user database schema and policies
 - `public/previous/` – previous questionnaire, available to recover drafts stored by the same browser
 - `README.md` – configuration/deployment guide
