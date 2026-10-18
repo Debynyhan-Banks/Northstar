@@ -12,18 +12,17 @@ async function render(path = "/", options = {}) {
   );
 }
 
-test("server-renders the C.F. Mechanical questionnaire shell", async () => {
+test("server-renders the C.F. Mechanical growth workspace shell", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
-  assert.match(html, /C\.F\. Mechanical \| Business &amp; Website Discovery/);
-  assert.match(html, /C\.F\. MECHANICAL/);
-  assert.match(html, /9 guided steps/);
-  assert.doesNotMatch(html, /Northstar Brief|First, tell us about your business/);
+  assert.match(html, /C\.F\. Mechanical \| Growth Workspace/);
+  assert.match(html, /Loading the C\.F\. Mechanical workspace/);
+  assert.doesNotMatch(html, /Northstar Brief/);
 });
 
-test("the old Northstar submission route is unavailable", async () => {
+test("the retired Northstar submission route remains unavailable", async () => {
   const response = await render("/api/submit", { method: "POST" });
   assert.equal(response.status, 404);
 });
