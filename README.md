@@ -4,7 +4,7 @@ This is a professional, mobile-friendly two-partner planning portal for **C.F. M
 
 ## What is built
 
-- 36 discovery questions in eight topics, with individual answers for each partner
+- 37 discovery questions in eight topics, with individual answers for each partner
 - A side-by-side alignment report identifying shared priorities, differences and open questions
 - Five shared-decision topics with independent partner selections
 - An editable 13-week Gantt chart with proposed tasks, owners, weeks, statuses, dependencies and completion evidence
