@@ -1,6 +1,7 @@
 import { getResponse, questionsForSeat, questionText, responseAnswered } from './discovery-model.js';
 import { planningRecords, confirmationStatus, marketingMetrics } from './planning-model.js';
 import { calculateFinance } from './finance-model.js';
+import { renderStrategicBrief, renderOperatingCharter, renderSegmentAnalysis, renderWebsiteBrief, renderCapacityReview, renderPerformanceReview } from './strategy-brief.js';
 
 const DEFAULT_SEATS = { christian: 'Christian Okoh', growth: 'Debynyhan Banks' };
 const SEAT_KEYS = ['christian', 'growth'];
@@ -69,7 +70,7 @@ function decisions(context, compact = false) {
   return table(['Decision', 'Current state', ...(compact ? [] : ['Rationale and conditions', 'Owner / review'])], (compact ? proposals.slice(0, 3) : proposals).map(proposal => {
     const state = confirmationStatus(proposal, context.records || {});
     const label = state.status === 'confirmed' ? 'Confirmed jointly for this saved version' : 'Proposed — awaiting current partner confirmations';
-    const stateDetails = state.status === 'confirmed' ? '' : `<br><small>${esc((state.missingSeats || []).map(seat => nameOf(context, seat)).join(', ') || 'Confirmation needed')}${state.staleSeats?.length ? ' · prior confirmations no longer match' : ''}${state.evidenceMissingIds?.length ? ` · missing evidence: ${esc(state.evidenceMissingIds.join(', '))}` : ''}</small>`;
+    const stateDetails = state.status === 'confirmed' ? '' : `<br><small>${esc((state.missingSeats || []).map(seat => nameOf(context, seat)).join(', ') || 'Confirmation needed')}${state.staleSeats?.length ? ' · prior confirmations no longer match' : ''}${state.evidenceMissingIds?.length ? ` · missing evidence: ${esc(state.evidenceMissingIds.join(', '))}` : ''}${state.sourceMissingIds?.length ? ` · missing sources: ${esc(state.sourceMissingIds.join(', '))}` : ''}</small>`;
     const confirmationDetails = compact ? '' : (state.confirmedSeats || []).map(seat => {
       const voteId = `${seat}:confirm:${idOf(proposal)}`;
       const vote = Object.values(context.records || {}).find(record => record.category === 'vote' && record.object_id === voteId);
@@ -215,6 +216,7 @@ function onePage(context, settings) {
   return `<article class="plan-one-page" id="plan-one-page"><h2>Our one-page strategy</h2><p class="caption">Working draft from saved records. We still need to confirm proposed choices together.</p><div class="plan-grid">
     ${section('Purpose and outcomes', `<dl>${field('Proposed shared vision', excerpt(settings.vision))}${field('Objectives', excerpt(settings.objectives))}</dl>${reference('settings', idOf(settings) || 'settings')}`)}
     ${section('Customers and first offer', `<dl>${field('Service area', excerpt(settings.serviceArea, 120))}${field('Initial offer', excerpt(settings.initialOffer))}${field('Proposed differentiator', excerpt(settings.differentiator, 150))}</dl><p class="caption">Public claims require evidence and confirmation.</p>`)}
+    ${section('Our strategic choices', renderStrategicBrief(context, true))}
     ${section('What each of us wants', visions || '<p class="plan-missing">Our individual visions have not been recorded.</p>')}
     ${section('Decisions and conditions', decisions(context, true))}
     ${section('Financial direction', financeSummary(context, true))}
@@ -224,14 +226,14 @@ function onePage(context, settings) {
 
 function detailed(context, settings) {
   return `<article class="plan-detailed" id="plan-detailed"><h2>Our detailed business and marketing plan</h2>
-    ${section('1. Executive summary and objectives', `<dl>${field('Proposed shared vision', settings.vision)}${field('Business objectives', settings.objectives)}${field('Initial offer', settings.initialOffer)}${field('Longer-term direction', settings.longTermDirection)}</dl>${partnerInputs(context, ['primary_goal', 'three_year', 'success_definition'])}`, 'plan-executive-summary')}
+    ${section('1. Executive summary and objectives', `${renderStrategicBrief(context)}<dl>${field('Proposed shared vision', settings.vision)}${field('Business objectives', settings.objectives)}${field('Initial offer', settings.initialOffer)}${field('Longer-term direction', settings.longTermDirection)}</dl>${partnerInputs(context, ['primary_goal', 'three_year', 'success_definition'])}`, 'plan-executive-summary')}
     ${section('2. Company position and delivery capabilities', `<p>Christian’s recorded company information and delivery assessment need supporting records. Scope must fit actual availability while Christian is employed.</p>${partnerInputs(context, ['completed_project', 'company_assets', 'registration_details', 'special_capabilities', 'labor_model', 'site_supervision', 'launch_gates'])}${evidence(context)}`, 'plan-capabilities')}
-    ${section('3. Target customers and market evidence', `${partnerInputs(context, ['target_markets', 'past_contacts', 'growth_strategy'])}${customerResearch(context)}`, 'plan-market')}
+    ${section('3. Target customers and market evidence', `${partnerInputs(context, ['target_markets', 'past_contacts', 'growth_strategy'])}${customerResearch(context)}<h4>Customer segments and strategic trade-offs</h4>${renderSegmentAnalysis(context)}`, 'plan-market')}
     ${section('4. Competition and our proposed advantage', `<dl>${field('Proposed differentiator', settings.differentiator)}</dl><p>Use the source records below and the evidence register to substantiate the advantage. Research observations remain observations; small samples do not establish market demand.</p>${competitorResearch(context)}`, 'plan-competition')}
     ${section('5. Initial offer, launch choice and pricing', `${partnerInputs(context, ['residential_first', 'preferred_services', 'contract_range', 'startup_economics', 'technical_signoff', 'bid_go_no_go', 'estimating_workflow'])}${launchOptions(context)}<h4>Recorded strategic decisions</h4>${decisions(context)}`, 'plan-offer')}
-    ${section('6. Marketing and sales execution', `${partnerInputs(context, ['brand_position', 'brand_ideas', 'customer_acquisition', 'marketing_assets', 'website_priority'])}${experiments(context)}<h4>Operating information flow</h4>${partnerInputs(context, ['systems_workflow', 'systems_data_access', 'systems_success'])}<p class="caption">Review actual inquiry, qualification, quote, accepted work, completion, invoice, collection and follow-up records in the Revenue pipeline. No funnel stage is assumed complete from a plan entry.</p>`, 'plan-marketing')}
-    ${section('7. Responsibilities, authority and capacity', `${partnerInputs(context, ['partner_role_title', 'business_mandate', 'business_lead_scope', 'technical_lead_scope', 'weekly_time', 'compensation_expectations', 'joint_decisions', 'meeting_rhythm', 'union_membership'])}<p class="caption">These are each person’s inputs. Confirm delegated authority, compensation and conditions in the decision log before treating them as an agreement.</p>`, 'plan-roles')}
-    ${section('8. Financial assumptions and scenarios', `${financeSummary(context)}${partnerInputs(context, ['capital_available', 'cash_requirements', 'funding_preference', 'spending_approval', 'financial_risk'])}`, 'plan-finances')}
+    ${section('6. Marketing and sales execution', `${partnerInputs(context, ['brand_position', 'brand_ideas', 'customer_acquisition', 'marketing_assets', 'website_priority'])}${experiments(context)}<h4>Our private website implementation brief</h4>${renderWebsiteBrief(context)}<h4>Operating information flow</h4>${partnerInputs(context, ['systems_workflow', 'systems_data_access', 'systems_success'])}<p class="caption">Review actual inquiry, qualification, quote, accepted work, completion, invoice, collection and follow-up records in the Revenue pipeline. No funnel stage is assumed complete from a plan entry.</p>`, 'plan-marketing')}
+    ${section('7. Responsibilities, authority and capacity', `${renderOperatingCharter(context)}<h4>Delivery capacity and workload</h4>${renderCapacityReview(context)}${partnerInputs(context, ['partner_role_title', 'business_mandate', 'business_lead_scope', 'technical_lead_scope', 'weekly_time', 'compensation_expectations', 'joint_decisions', 'meeting_rhythm', 'union_membership'])}<p class="caption">These are each person’s inputs. Confirm delegated authority, compensation and conditions in the decision log before treating them as an agreement.</p>`, 'plan-roles')}
+    ${section('8. Financial assumptions and scenarios', `${financeSummary(context)}<h4>Forecast versus actual results</h4>${renderPerformanceReview(context)}${partnerInputs(context, ['capital_available', 'cash_requirements', 'funding_preference', 'spending_approval', 'financial_risk'])}`, 'plan-finances')}
     ${section('9. Risks, unresolved questions and contingency actions', `<dl>${field('Recorded risks', settings.risks)}${field('Proposed contingency actions', settings.contingencies)}</dl>${partnerInputs(context, ['roadblocks', 'partner_expectations'])}${openQuestions(context)}`, 'plan-risks')}
     ${section('10. Thirteen-week execution schedule', `<p>The schedule contains our saved work items. Entries remain proposed until the relevant direction and commitments are confirmed; completion status needs evidence.</p><dl>${field('Plan start date', settings.planStartDate)}</dl>${tasks(context)}`, 'plan-execution')}
     ${section('11. Twelve-month milestones', milestones(settings.monthMilestones), 'plan-milestones')}
@@ -246,7 +248,7 @@ function planBody(context) {
 
 /** Assemble a working plan without changing any saved records or inferring approval. */
 export function renderBusinessPlan(context = {}) {
-  return `<div class="heading-line"><div><div class="micro">From our evidence to execution</div><h2>Our living business plan</h2><p class="item-desc">Review our strategy, supporting information, financial assumptions and accountable work.</p></div><div class="button-row"><button class="btn" data-action="print-plan">Print / save PDF</button><button class="btn primary" data-action="export-plan">Export plan HTML ↓</button></div></div>${planBody(context)}`;
+  return `<div class="heading-line"><div><div class="micro">From our evidence to execution</div><h2>Our living business plan</h2><p class="item-desc">Review our strategy, supporting information, financial assumptions and accountable work.</p></div><div class="button-row"><button class="btn" data-plan-new="strategy-brief">Edit strategic brief</button><button class="btn" data-action="print-plan">Print / save PDF</button><button class="btn primary" data-action="export-plan">Export plan HTML ↓</button></div></div>${planBody(context)}`;
 }
 
 /** Export a standalone private, printable HTML document with no external services. */

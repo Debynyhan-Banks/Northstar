@@ -278,3 +278,125 @@ test("unpaid invoice balance uses each job's allocated collections, with unknown
   assert.equal(marketingMetrics(null, [], { asOf: AS_OF }).unpaidInvoices, null);
   assert.equal(marketingMetrics(null, [{ stage: "Invoiced", invoiceAmount: 0, cashCollected: 0 }], { asOf: AS_OF }).unpaidInvoices, 0);
 });
+
+test("legacy confirmation fingerprints remain byte-for-byte stable without typed source references", () => {
+  const oldFingerprint = '{"conditions":"Christian confirms qualified capacity","decisionDate":"2026-10-19","direction":"Test selected residential service","evidenceIds":[],"evidenceSnapshot":[],"owner":"growth","rationale":"Validate delivery and cash","reviewDate":"2026-11-02","title":"Residential pilot"}';
+  assert.equal(canonicalProposal(proposal), oldFingerprint);
+  assert.equal(canonicalProposal({ ...proposal, sourceRefs: [] }), oldFingerprint, "An empty new reference picker does not stale an unchanged legacy agreement");
+  assert.equal(confirmationStatus(proposal, confirmations(proposal)).status, "confirmed");
+});
+
+test("typed references protect current response, segment and charter content including meaningful source status", () => {
+  const charter = { id: "charter", planningType: "charter", title: "Our working arrangement", sourceRefs: ["response:christian:business_mandate", "segment:residential"], evidenceIds: [] };
+  const sources = {
+    response: { category: "response", object_id: "christian:business_mandate", body: { seat: "christian", value: "Limited hours", explanation: "Technical approval retained", updatedAt: "2026-10-19" } },
+    segment: planningRow("segment", "plan:segment:residential", { id: "residential", title: "Selected homeowners", status: "proposed", sourceRefs: ["evidence:coverage"] }),
+    evidence: planningRow("evidence", "plan:evidence:coverage", { id: "coverage", title: "Weekday coverage", verification: "unverified", classification: "unknown" }),
+  };
+  const records = confirmations(charter, sources);
+  assert.equal(confirmationStatus(charter, records).status, "confirmed");
+  const saved = canonicalProposal(charter, records);
+  assert.equal(canonicalProposal({ ...charter, sourceRefs: [...charter.sourceRefs].reverse(), sourceSnapshot: "fake old sources" }, records), saved);
+  records.response.body.updatedAt = "2026-10-20";
+  records.segment.body.revision = 100;
+  assert.equal(canonicalProposal(charter, records), saved, "Storage metadata is not strategy content");
+  for (const mutate of [
+    rows => { rows.response.body.value = "No weekday availability"; },
+    rows => { rows.segment.body.status = "rejected"; },
+    rows => { rows.evidence.body.verification = "verified"; },
+    rows => { rows.evidence.body.title = "Coverage withdrawn"; },
+  ]) {
+    const changed = structuredClone(records); mutate(changed);
+    assert.deepEqual(confirmationStatus(charter, changed).staleSeats, ["christian", "growth"]);
+  }
+});
+
+test("nested missing sources block confirmation even when the stored snapshot matches", () => {
+  const current = { ...proposal, sourceRefs: ["charter:charter", "response:christian:absent"] };
+  const source = { charter: planningRow("charter", "plan:charter:charter", { id: "charter", evidenceIds: ["missing-coverage"], sourceRefs: ["segment:missing-segment"] }) };
+  const records = confirmations(current, source);
+  const state = confirmationStatus(current, records);
+  assert.equal(state.status, "awaiting-partner");
+  assert.deepEqual(state.confirmedSeats, []);
+  assert.deepEqual(state.sourceMissingIds, ["evidence:missing-coverage", "response:christian:absent", "segment:missing-segment"]);
+  assert.deepEqual(state.staleSeats, ["christian", "growth"]);
+});
+
+test("cyclic source references are deterministic and still invalidate on changes to any reached record", () => {
+  const current = { ...proposal, sourceRefs: ["segment:a"] };
+  const source = {
+    a: planningRow("segment", "plan:segment:a", { id: "a", title: "A", sourceRefs: ["charter:b"] }),
+    b: planningRow("charter", "plan:charter:b", { id: "b", title: "B", sourceRefs: ["segment:a"] }),
+  };
+  const records = confirmations(current, source);
+  assert.equal(confirmationStatus(current, records).status, "confirmed");
+  assert.match(canonicalProposal(current, records), /"cycle":true/);
+  records.b.body.title = "B revised";
+  assert.equal(confirmationStatus(current, records).status, "awaiting-partner");
+  const deep = {};
+  for (let index = 0; index < 15; index++) deep[index] = planningRow("segment", `plan:segment:${index}`, { id: String(index), title: String(index), sourceRefs: index < 14 ? [`segment:${index + 1}`] : [] });
+  const oversized = { ...proposal, sourceRefs: ["segment:0"] };
+  assert.ok(confirmationStatus(oversized, confirmations(oversized, deep)).sourceMissingIds.length, "Excessive depth requires explicit review rather than silently excluding content");
+});
+
+test("ordinary tasks and opportunities are covered sources, while typed form links cannot silently bypass coverage", () => {
+  const current = { ...proposal, sourceRefs: ["task:followup", "opportunity:job-1"] };
+  const records = confirmations(current, {
+    task: { category: "task", object_id: "followup", body: { title: "Review coverage", status: "in-progress" } },
+    job: { category: "opportunity", object_id: "job-1", body: { title: "A real opportunity", invoiceAmount: "100" } },
+  });
+  assert.equal(confirmationStatus(current, records).status, "confirmed");
+  records.task.body.status = "blocked";
+  assert.equal(confirmationStatus(current, records).status, "awaiting-partner");
+  const brief = { id: "strategy-brief", planningType: "strategy-brief", selectedSegmentId: "specific", sourceRefs: [] };
+  const selected = confirmations(brief, {
+    segment: planningRow("segment", "plan:segment:specific", { id: "specific", title: "A specific buyer", jobModelIds: ["job"], capabilityStatus: "unknown" }),
+    job: planningRow("job-model", "plan:job-model:job", { id: "job", salePrice: "200" }),
+  });
+  assert.equal(confirmationStatus(brief, selected).status, "confirmed");
+  selected.job.body.salePrice = "100";
+  assert.equal(confirmationStatus(brief, selected).status, "awaiting-partner");
+  delete selected.job;
+  assert.deepEqual(confirmationStatus(brief, selected).sourceMissingIds, ["job-model:job"]);
+});
+
+test("captured forecast baselines protect their frozen content without following current live provenance", () => {
+  const current = { ...proposal, sourceRefs: ["forecast-baseline:baseline-1"] };
+  const records = confirmations(current, {
+    baseline: planningRow("forecast-baseline", "plan:forecast-baseline:baseline-1", { id: "baseline-1", capturedAt: AS_OF, scenario: "base", sourceRefs: ["job-model:repair"], inputs: { salePrice: 100 }, forecast: { revenue: 1000 } }),
+    live: planningRow("job-model", "plan:job-model:repair", { id: "repair", salePrice: 100 }),
+  });
+  assert.equal(confirmationStatus(current, records).status, "confirmed");
+  records.live.body.salePrice = 200;
+  assert.equal(confirmationStatus(current, records).status, "confirmed", "A new forecast does not rewrite a historical baseline");
+  delete records.live;
+  assert.equal(confirmationStatus(current, records).status, "confirmed", "Frozen inputs do not depend on live source retention");
+  records.baseline.body.forecast.revenue = 2000;
+  assert.equal(confirmationStatus(current, records).status, "awaiting-partner", "Changing captured values still invalidates confirmation");
+});
+
+test("actual-job service selections resolve to financial models while demand selections resolve to capacity models", () => {
+  const current = { ...proposal, sourceRefs: ["job-actual:actual", "demand-week:demand"] };
+  const sources = {
+    actual: planningRow("job-actual", "plan:job-actual:actual", { id: "actual", serviceModelId: "financial", revenue: 100 }),
+    demand: planningRow("demand-week", "plan:demand-week:demand", { id: "demand", serviceModelId: "capacity", jobs: 1 }),
+    finance: planningRow("job-model", "plan:job-model:financial", { id: "financial", title: "Costed service" }),
+    capacity: planningRow("service-capacity", "plan:service-capacity:capacity", { id: "capacity", jobModelId: "financial", fieldHours: 2 }),
+  };
+  const records = confirmations(current, sources);
+  assert.equal(confirmationStatus(current, records).status, "confirmed");
+  records.finance.body.title = "Revised service";
+  assert.equal(confirmationStatus(current, records).status, "awaiting-partner");
+});
+
+test("dense cross-linked source graphs serialize each record once and remain sensitive to all content", () => {
+  const sources = {};
+  for (let index = 0; index < 12; index++) sources[index] = planningRow("segment", `plan:segment:${index}`, { id: String(index), title: `Segment ${index}`, sourceRefs: Array.from({ length: 12 }, (_, other) => `segment:${other}`) });
+  const current = { ...proposal, sourceRefs: ["segment:0"] };
+  const records = confirmations(current, sources);
+  const snapshot = canonicalProposal(current, records);
+  assert.ok(snapshot.length < 20000, "Cross-links use references rather than exponential repeated content");
+  assert.equal(confirmationStatus(current, records).status, "confirmed");
+  records[11].body.title = "Changed reachable source";
+  assert.equal(confirmationStatus(current, records).status, "awaiting-partner");
+});

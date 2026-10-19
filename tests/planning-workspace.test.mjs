@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getPlanningForm, validatePlanningForm, renderPlanningModal, safeSource, financeSummary, renderPlanning } from '../app/planning-workspace.js';
+import { getPlanningForm, validatePlanningForm, renderPlanningModal, safeSource, financeSummary, renderPlanning, renderConfirmedDecisions, sourceReferenceOptions } from '../app/planning-workspace.js';
 
 const context = { records: {}, seat: 'growth', now: '2026-10-19' };
 const evidence = { title: 'Confirm available delivery hours', classification: 'confirmed', verification: 'verified', owner: 'christian', source: 'Company capacity review, 2026-10-19', observedOn: '2026-10-19', remainingQuestion: '', researchDue: '' };
@@ -109,3 +109,5 @@ test('root financial summaries read scenario-specific stored settings and show i
   assert.match(html, /Startup included in cash out/);
   assert.match(html, /never added together/);
 });
+
+test('proposal source picker names the partner and question and blocks missing linked sources',()=>{const records={a:{category:'response',object_id:'christian:vision',body:{value:'Recorded vision'}},b:{category:'task',object_id:'plan:proposal:p',body:{id:'p',planningType:'proposal',title:'Review our direction',sourceRefs:['segment:missing']}}};const ctx={records,seat:'growth',questions:[{id:'vision',type:'long',audience:'both',label:'Our future direction'}]};assert.equal(sourceReferenceOptions(ctx).find(o=>o.value==='response:christian:vision').label,'Christian Okoh: Our future direction');const html=renderConfirmedDecisions(ctx);assert.match(html,/Missing source references/);assert.match(html,/segment:missing/);assert.match(html,/data-plan-confirm="p"[^>]*disabled/)});
