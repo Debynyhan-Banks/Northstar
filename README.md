@@ -21,6 +21,28 @@ The starting context is explicit: Christian is president, currently employed and
 
 The redesign preserves the original **37 question IDs and existing option values**. Earlier answers to questions now assigned to the other partner remain saved and available for earlier-answer review and export. Existing tasks, comments, opportunities and decision preferences remain planning records. The starting roadmap and its commercial activities are editable proposals that the partners should review against their chosen revenue approach; the application does not automatically approve them or invent performance targets.
 
+## Strategy, finance and execution upgrade
+
+Start with **Discovery essentials** (the prioritized questions for each partner), then open deeper discovery when needed. Existing answers, historical choices and original task IDs are preserved.
+
+- **Evidence & open questions** classifies facts, estimates, preferences and unknowns. A verified fact needs a substantive source and date. Each unresolved record generates or updates an assigned, dated research task; completed research tasks are retained if a new review is needed.
+- **Customer research** records customer conversations and competitor observations. **Launch comparison** compares delivery, demand, costs, collection timing and constraints without declaring a winner.
+- **Financial planning** provides startup spending, job costing and service mix, cash/economic break-even, base/downside assumptions, 13 weekly cash periods and 12 monthly operating periods. Set forecast start and actual dated startup spending; review startup costs explicitly even when there are none. Empty inputs are unknown; enter 0 only when zero is known. Fixed monthly overhead, compensation and marketing are charged once; job-level acquisition costs are incremental costs. Unpaid owner time is shown separately from cash expenses. Weekly and monthly forecasts are alternative views and are never added together.
+- **Marketing experiments** connects actual spend to attributed opportunities and distinct paying customers. The pipeline stores dated milestones, invoice amounts, collections, direct job costs, callbacks and repeat/referral follow-up. Results are entered manually and date-filtered; inferred legacy stage counts are identified. Spend limits are not actual spend.
+- **Decisions & confirmations** preserves individual preferences separately from proposals. Each partner confirms the exact proposal and linked evidence through their own protected account. Any content or source change makes previous confirmations stale; a matching preference is not confirmation. Manual experiment status is not a joint approval.
+- **Accountability** retains existing tasks and adds a single accountable owner, deadline (manual or derived from plan start and end week), budget, dependency validation, blockers, completion criteria, evidence and dated measures. Previously shared tasks remain intact until someone chooses one lead on editing.
+- **Our business plan** generates a compact strategy and a detailed deterministic draft with traceable references, current confirmations, missing inputs, forecasts, tasks and milestones. Export a standalone HTML plan or open the print version, then use the browser's Print / Save as PDF. No external AI service is required.
+
+### Persistence and compatibility
+
+No migration is necessary for this upgrade. New shared planning documents use the existing `app_records` task category with a `body.planningType` discriminator and `plan:<type>:<logical-id>` object IDs. They are excluded from ordinary task collections. Confirmations use existing own-seat-protected vote records (`<seat>:confirm:<proposal-id>`), including the exact canonical proposal and linked evidence snapshot. The existing membership and Row Level Security policies continue to protect reads and writes. Do not rerun the original database setup script against the live project.
+
+Version 2 JSON backups include all answers, tasks, planning inputs, research, financial rows, experiments, events and confirmations. Import remains local-preview-only. Concurrent shared planning edits use the existing last-writer-wins behavior; stale confirmation snapshots prevent an edited proposal from retaining current approval.
+
+### Verification
+
+Automated coverage includes partner routing and old-answer preservation, serialized cloud saves, financial missing/zero/negative cases, scenario separation, startup spending and owner time, exact marketing attribution and unique customers, decision invalidation, safe exports and complete backups. `tests/planning-security.test.sql` adds regressions to the original database security tests and is run only against a disposable empty PostgreSQL cluster. It verifies members can share planning records while neither can forge the other's confirmations; outsiders cannot access them. No live database reset or service credentials are used.
+
 ## Quick preview (no account needed)
 
 Run `npm ci` and `npm run dev`, then open the displayed local URL. The included `public/portal-config.js` points to the C.F. Mechanical Supabase project using its public application key. To test without a cloud account, temporarily clear both connection values: the portal then runs in **local preview** mode. Switch between Christian and Debynyhan Banks at the top to test both sets of answers. All preview data is saved in that browser only.
@@ -48,14 +70,14 @@ If a confirmation message does not appear in the inbox, check Spam; the earlier 
 - RLS protects the workspace data; do not disable it. The provided SQL enforces exactly two named seats and binds discovery answers/votes to the authenticated account. Owner invitations require an exact matching **verified** email address.
 - Authentication confirmation email is configured. Workspace invitations and application updates do not send notification emails automatically.
 - The application does not integrate bid portals, accounting, scheduling, banking or estimating products; host project files; or perform mechanical takeoffs or construction estimates. It records the partners' plans, opportunities, measurements and links.
-- Business metrics and completion evidence are entered by the partners. The app does not automatically import business data, calculate audited revenue or profit, evaluate technical readiness or accept a job.
+- Business metrics and completion evidence are entered by the partners. The app calculates planning estimates from manual inputs; it does not import accounting data, calculate audited results, evaluate technical readiness or accept a job.
 - A public website for customer marketing is a **separate future deliverable**. This workspace is intended for private collaboration.
 - No service worker or advanced offline sync is installed. Use the JSON backup capability for independent copies of your planning records.
 - Concurrent edits to the same shared task or opportunity use **last-writer-wins** behavior. Keep JSON backups of important records.
 
 ## Recommended first session
 
-Christian and Debynyhan each complete the questions relevant to them, starting with the vision, residential feasibility, operating mandate and working arrangement. Use the dashboard's decision briefs to see the supporting inputs and gaps, compare shared choices in Partner perspectives and record preferences and conditions in Decisions. Revise the roadmap together, assign owners and add measurable targets with evidence. Discovery progress is guidance; it does not authorize a launch or require an automatic business decision when every answer is filled in.
+Christian and Debynyhan each start with Discovery essentials, then set the plan start date, record launch-critical unknowns with owners and deadlines, and draft a first launch comparison. They can plan while deeper discovery remains incomplete. Use the dashboard's decision briefs to see the supporting inputs and gaps, compare shared choices in Partner perspectives and record preferences and conditions in Decisions. Revise the roadmap together, assign owners and add measurable targets with evidence. Discovery progress is guidance; it does not authorize a launch or require an automatic business decision when every answer is filled in.
 
 ## Local checks
 
@@ -66,7 +88,7 @@ Run `npm test` to build the application and run the automated tests, including r
 - `app/Questionnaire.tsx` and `app/growth-workspace.js` – application entry and logic
 - `app/strategy-content.js` – partner-specific questions, known context and dashboard topic mappings
 - `app/discovery-model.js` – role routing, question wording, answer completion and comparison/input states
-- `app/globals.css` and `app/strategy.css` – responsive interface and strategy dashboard styles
+- `app/globals.css`, `app/strategy.css` and `app/planning.css` – responsive interface and strategy dashboard styles
 - `app/cloud-save-queue.js` – shared-save queue and retry handling
 - `tests/` – automated build, discovery-model and persistence checks
 - `public/portal-config.js` – public frontend connection configuration
