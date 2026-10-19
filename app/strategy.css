@@ -5,3 +5,5 @@
 @media print{.strategy-topic:not([open]){display:none}.partner-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.save-state{display:none}.question-choices{break-inside:avoid}}
 
 .page>.heading-line{margin-bottom:22px}
+
+.vision-detail>summary{cursor:pointer;color:#2e6283;font-size:12px;font-weight:750;margin:12px 0}.vision-detail[open]{border-top:1px solid var(--line);padding-top:7px}.vision-detail p{max-height:420px;overflow:auto;padding-right:8px;line-height:1.7}
