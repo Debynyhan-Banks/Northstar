@@ -177,3 +177,5 @@ test('coerced types and overflow cannot fabricate financial amounts', () => {
   const html = renderFinance({ records: (type) => type === 'startup-cost' ? [{ id: 'bad', scenario: 'base', title: 'Malformed startup', amount: false }] : [] });
   assert.ok(!html.includes('Malformed startup</td><td>$0.00'));
 });
+
+test('weekly cash actions identify the chosen scenario and week without changing financial inputs',()=>{const html=renderFinance({records:()=>[]});assert.match(html,/data-plan-new="cash-week" data-plan-scenario="base" data-plan-week="1"/);assert.match(html,/data-plan-new="cash-week" data-plan-scenario="downside" data-plan-week="13"/);assert.match(html,/data-plan-new="job-model" data-plan-scenario="downside"/)});

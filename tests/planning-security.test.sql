@@ -76,6 +76,35 @@ with changed as (
  where object_id='growth:confirm:plan:proposal:launch' returning 1
 ) select 1 / (count(*)=0)::int from changed;
 
+-- New typed documents inherit the same shared planning boundary without a
+-- schema reset or weaker partner-specific confirmation permissions.
+insert into public.app_records(workspace_id,category,object_id,body) values
+ (:'wid','task','plan:charter:charter','{"id":"charter","planningType":"charter","mandate":"Proposed operating scope","sourceRefs":["response:christian:primary_goal"]}'),
+ (:'wid','task','plan:segment:homeowners','{"id":"homeowners","planningType":"segment","title":"Proposed homeowner segment"}'),
+ (:'wid','task','plan:website-brief:website-brief','{"id":"website-brief","planningType":"website-brief","audience":"Proposed segment"}'),
+ (:'wid','task','plan:forecast-baseline:test-baseline','{"id":"test-baseline","planningType":"forecast-baseline","scenario":"base","snapshot":{"revenue":100}}');
+insert into public.app_records(workspace_id,category,object_id,body) values
+ (:'wid','vote','christian:confirm:charter',
+  '{"seat":"christian","respondent_uid":"11111111-1111-4111-8111-111111111111","proposalId":"charter","choice":"confirmed","snapshot":"exact-charter-and-linked-sources","confirmedAt":"2026-10-19T15:00:00Z"}');
+select set_config('request.jwt.claim.sub','22222222-2222-4222-8222-222222222222',false);
+select 1 / ((select count(*) from public.app_records where object_id in ('plan:charter:charter','plan:segment:homeowners','plan:website-brief:website-brief','plan:forecast-baseline:test-baseline'))=4)::int;
+update public.app_records set body=body || '{"mandate":"Revised proposal for discussion"}' where object_id='plan:charter:charter';
+with changed as (
+ update public.app_records set body=body || '{"snapshot":"forged-partner-charter"}'
+ where object_id='christian:confirm:charter' returning 1
+) select 1 / (count(*)=0)::int from changed;
+select public.expect_denied(format($q$insert into public.app_records(workspace_id,category,object_id,body)
+ values (%L,'vote','christian:confirm:strategy-brief',
+ '{"seat":"christian","respondent_uid":"11111111-1111-4111-8111-111111111111","choice":"confirmed"}')$q$, :'wid'));
+insert into public.app_records(workspace_id,category,object_id,body) values
+ (:'wid','vote','growth:confirm:charter',
+  '{"seat":"growth","respondent_uid":"22222222-2222-4222-8222-222222222222","proposalId":"charter","choice":"confirmed","snapshot":"revised-charter-and-linked-sources","confirmedAt":"2026-10-19T16:00:00Z"}');
+select set_config('request.jwt.claim.sub','11111111-1111-4111-8111-111111111111',false);
+with changed as (
+ update public.app_records set body=body || '{"snapshot":"president-cannot-confirm-for-partner"}'
+ where object_id='growth:confirm:charter' returning 1
+) select 1 / (count(*)=0)::int from changed;
+
 -- A third account has neither shared planning visibility nor write authority.
 select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',false);
 select 1 / ((select count(*) from public.app_records)=0)::int;

@@ -217,3 +217,72 @@ test('essential discovery includes both partners’ services and customers plus 
   const form = getPlanningForm('experiment');
   assert.match(form.fields.find(field => field.key === 'status').hint, /does not replace both partners’ confirmations/);
 });
+
+test('strategic brief includes selected segment, trade-offs, review triggers and exact-version confirmation dates', () => {
+  const ctx = context([
+    doc('segment', 'homeowners', { id: 'homeowners', title: 'Homeowners with planned replacement needs', problem: 'An aging system and uncertain replacement costs', evidenceIds: ['interviews'] }),
+    doc('evidence', 'interviews', { id: 'interviews', title: 'Customer conversation notes', source: 'Private interview notes', classification: 'estimate', verification: 'unverified' }),
+    doc('strategy-brief', 'strategy-brief', { id: 'strategy-brief', title: 'Our proposed launch strategy', objectives: 'Validate delivery and job economics', measures: 'Contribution, paid jobs and callback hours', selectedSegmentId: 'homeowners', customerProblem: 'Clear replacement choices', initialOffer: 'A scoped replacement consultation', positioning: 'A reviewed proposal with clear scheduling', advantage: 'Supported advantage still needs evidence', alternatives: 'Compare service calls and small commercial work', tradeoffs: 'Limit territory while capacity is constrained', operatingModel: 'Technical review by Christian', fundingNeeds: 'Supplier terms to verify', marketingApproach: 'A bounded referral test', risks: 'Weekday technical coverage', contingencies: 'Pause offers without coverage', executionPriorities: 'Confirm available hours', commercialMilestones: 'Document commercial bid requirements', reviewDate: '2026-11-02', changeTriggers: 'Change direction if capacity or unit contribution is inadequate', sourceRefs: ['segment:homeowners'] }),
+  ]);
+  const brief = planningRecords(ctx.records, 'strategy-brief')[0];
+  confirmed(ctx, brief);
+  const before = structuredClone(ctx);
+  const html = exportBusinessPlan(ctx);
+  for (const expected of ['Homeowners with planned replacement needs', 'Alternatives considered', 'Compare service calls and small commercial work', 'Strategic trade-offs', 'Limit territory while capacity is constrained', '2026-11-02', 'Change direction if capacity or unit contribution is inadequate', '[strategy-brief:strategy-brief]', '[segment:homeowners]', 'Christian Okoh: confirmed 2026-10-19T14:00:00Z', 'Debynyhan Banks: confirmed 2026-10-19T14:00:00Z']) assert.ok(html.includes(expected), expected);
+  assert.match(html, /Confirmed jointly for this saved version/);
+  assert.deepEqual(ctx, before);
+  ctx.records['task|interviews'].body.source = 'Updated interview findings';
+  const changed = exportBusinessPlan(ctx);
+  assert.doesNotMatch(changed, /Confirmed jointly for this saved version/);
+  assert.match(changed, /Prior confirmations no longer match/);
+});
+
+test('charter and website requirements export as private drafts with original partner inputs kept separate', () => {
+  const ctx = context([
+    row('response', 'christian:business_mandate', { value: 'Christian’s original mandate answer' }),
+    doc('charter', 'charter', { id: 'charter', christianTitle: 'President — description to confirm', christianResponsibilities: 'Technical review', growthTitle: 'Debynyhan’s intended role', growthResponsibilities: 'Organize the business', mandate: 'A proposed operating arrangement', decisionLimits: 'Spending thresholds undecided', backup: 'Qualified weekday backup not yet confirmed', reviewDate: '2026-11-02', sourceRefs: ['response:christian:business_mandate'] }),
+    doc('website-brief', 'website-brief', { id: 'website-brief', audience: 'Selected customer segment', goal: 'Qualified service inquiries', domain: 'Branded domain to agree', services: 'Only verified deliverable services', hours: 'Actual coverage still needs confirmation', companyProjects: 'Company examples require verification', christianExperience: 'Christian’s individual HVAC experience', testimonialPermissions: 'Written permission required', responseWorkflow: 'Debynyhan qualifies, Christian reviews technical scope', measurement: 'Inquiry through paid job' }),
+    doc('website-page', 'service', { id: 'service', title: 'Residential services page', audience: 'Selected homeowners', offer: 'Scoped service offer', action: 'Request a service conversation', proof: 'Verified credential and permissioned example', owner: 'growth', sourceRefs: ['website-brief:website-brief'] }),
+  ]);
+  const html = exportBusinessPlan(ctx);
+  for (const expected of ['Business planning record', 'Christian’s original mandate answer', 'A proposed operating arrangement', 'Spending thresholds undecided', '[charter:charter]', 'Private website requirements', 'Christian’s individual HVAC experience', 'Company examples require verification', 'Request a service conversation', '[website-page:service]', '[website-brief:website-brief]']) assert.ok(html.includes(expected), expected);
+  assert.doesNotMatch(html, /Confirmed jointly for this saved version|<button|data-plan-new=/);
+});
+
+test('new strategic drafting fields are escaped and export does not fabricate selected segments or confirmations', () => {
+  const ctx = context([
+    doc('strategy-brief', 'strategy-brief', { id: 'strategy-brief', title: '<svg onload=alert(1)>', selectedSegmentId: 'missing', customerProblem: '<script>bad</script>', status: 'confirmed', sourceRefs: ['segment:missing'] }),
+    doc('website-page', 'bad', { id: 'bad', title: '<img src=x onerror=alert(2)>', action: 'A&B' }),
+  ]);
+  const html = exportBusinessPlan(ctx);
+  assert.match(html, /Selected segment record missing/);
+  assert.match(html, /Missing linked sources: segment:missing/);
+  assert.match(html, /&lt;script&gt;bad&lt;\/script&gt;/);
+  assert.doesNotMatch(html, /<script|<svg|<img|Confirmed jointly for this saved version/);
+});
+
+test('an incomplete strategic brief cannot appear jointly ready in an export even if matching votes were stored', () => {
+  const ctx = context([doc('strategy-brief', 'strategy-brief', { id: 'strategy-brief', title: 'Still being discussed', sourceRefs: [], objectives: 'Unknown' })]);
+  confirmed(ctx, planningRecords(ctx.records, 'strategy-brief')[0]);
+  const html = exportBusinessPlan(ctx);
+  assert.doesNotMatch(html, /Confirmed jointly for this saved version/);
+  assert.match(html, /Clarify business objectives before confirming/);
+  assert.match(html, /Draft proposal — current partner confirmations needed/);
+});
+
+test('private plan exports capacity limitations and frozen-baseline comparisons with honest partial-period treatment', () => {
+  const ctx = context([
+    doc('capacity-person', 'christian', { id: 'christian', name: 'Christian Okoh', seat: 'christian', qualificationStatus: 'proposed', active: 'yes' }),
+    doc('capacity-week', 'week', { id: 'week', personId: 'christian', weekStart: '2026-10-19', availabilityStatus: 'proposed', allocationBasis: 'whole-week', availableHours: '8', fieldHours: '4', travelHours: '1', estimatingHours: '1', adminHours: '0', supportHours: '0', supervisionHours: '1', callbackHours: '1' }),
+    doc('forecast-baseline', 'original', { id: 'original', title: 'Original cash expectation', scenario: 'base', capturedAt: '2026-10-19T12:00:00Z', sourceRefs: ['cash-week:source'], inputs: [{ customerReceipts: 100 }], forecast: { cash: { periods: [{ startDate: '2026-10-19', endDate: '2026-10-25', inputs: { customerReceipts: 100 }, inflows: 100, outflows: 50, change: 50 }] } } }),
+    doc('actual-period', 'week-results', { id: 'week-results', title: 'Week one collections review', periodKind: 'cash-week', startDate: '2026-10-19', endDate: '2026-10-25', reportingDate: '2026-10-25', coverage: 'complete', sourceMode: 'manual', customerReceipts: 80, otherInflows: 0, jobPayments: 30, overheadPayments: 0, compensationPayments: 0, marketingPayments: 0, startupPayments: 0, otherPayments: 0, explanation: 'One customer payment arrived later', correctiveAction: 'Confirm the remaining payment date', owner: 'growth', reviewDate: '2026-10-27' }),
+  ]);
+  const html = exportBusinessPlan(ctx);
+  for (const expected of ['Proposed availability does not count as confirmed capacity', 'Christian Okoh', 'technical coverage is unverified', '[capacity-week:week]', 'Original cash expectation', '[forecast-baseline:original]', '2026-10-19T12:00:00Z', 'Week one collections review', 'One customer payment arrived later', 'Confirm the remaining payment date', '2026-10-27', '-20%']) assert.ok(html.includes(expected), expected);
+  const partial = structuredClone(ctx);
+  partial.records['task|week-results'].body.coverage = 'partial';
+  const changed = exportBusinessPlan(partial);
+  assert.match(changed, /Incomplete or incompatible reporting/);
+  assert.match(changed, /Not comparable/);
+  assert.doesNotMatch(changed, /-20%/);
+});

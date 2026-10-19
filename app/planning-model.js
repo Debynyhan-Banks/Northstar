@@ -1,7 +1,7 @@
 const SEATS = ["christian", "growth"];
 const NON_CONTENT_FIELDS = new Set([
   "id", "_id", "_recordId", "_created_at", "_updated_at", "created_at", "updated_at",
-  "createdAt", "updatedAt", "revision", "planningType", "status", "confirmations", "evidenceSnapshot",
+  "createdAt", "updatedAt", "revision", "planningType", "status", "confirmations", "evidenceSnapshot", "sourceSnapshot",
 ]);
 
 function recordRows(records) {
@@ -47,10 +47,83 @@ function currentEvidence(proposal, records) {
   return evidenceIds(proposal).map(id => ({ id, record: evidence.has(id) ? contentOf(evidence.get(id)) : null }));
 }
 
-// A confirmation covers the proposal's actual content and current linked sources.
-// A revision counter or a stored snapshot cannot keep approval valid after edits.
+// Legacy fingerprints are intentionally unchanged. New typed references extend
+// the fingerprint only when present, so existing approvals retain their meaning.
+const SOURCE_META_FIELDS = new Set([...NON_CONTENT_FIELDS].filter(key => key !== "status"));
+const MAX_SOURCE_DEPTH = 12;
+function sourceRefs(value) {
+  return [...new Set((Array.isArray(value?.sourceRefs) ? value.sourceRefs : [])
+    .filter(ref => typeof ref === "string" && ref.trim()).map(ref => ref.trim()))].sort();
+}
+const LINK_FIELDS = {
+  selectedSegmentId: "segment", segmentId: "segment", researchIds: "customer-research",
+  competitorIds: "competitor", launchOptionIds: "launch-option", jobModelIds: "job-model",
+  experimentIds: "experiment", experimentId: "experiment", charterId: "charter",
+  personId: "capacity-person", jobModelId: "job-model", serviceModelId: "service-capacity", opportunityId: "opportunity",
+};
+const NEW_DOCUMENT_TYPES = new Set(["charter", "segment", "strategy-brief", "strategy-step", "website-brief", "website-page", "capacity-person", "capacity-week", "capacity-demand", "forecast-baseline", "actual-period"]);
+function semanticRefs(value) {
+  return Object.entries(LINK_FIELDS).flatMap(([field, type]) => {
+    const ids = Array.isArray(value?.[field]) ? value[field] : [value?.[field]];
+    const linkedType = field === "serviceModelId" && value?.planningType === "job-actual" ? "job-model" : type;
+    return ids.filter(id => typeof id === "string" && id.trim()).map(id => `${linkedType}:${id.trim()}`);
+  });
+}
+function linkedRefs(value, includeEvidence = true) {
+  return [...new Set([...sourceRefs(value), ...semanticRefs(value), ...(includeEvidence ? evidenceIds(value).map(id => `evidence:${id}`) : [])])].sort();
+}
+/** Typed form selections and explicit sources, suitable for traceable display. */
+export function planningSourceRefs(value) { return linkedRefs(value); }
+function hasExtendedSources(value) {
+  return sourceRefs(value).length || semanticRefs(value).length || (NEW_DOCUMENT_TYPES.has(value?.planningType) && evidenceIds(value).length);
+}
+function referencedRecord(ref, records) {
+  const separator = ref.indexOf(":");
+  if (separator <= 0 || separator === ref.length - 1) return null;
+  const type = ref.slice(0, separator), id = ref.slice(separator + 1);
+  if (["response", "task", "opportunity"].includes(type)) {
+    const record = recordRows(records).find(row => row?.category === type && row.object_id === id && row.body && typeof row.body === "object" && !Array.isArray(row.body) && (type !== "task" || !row.body.planningType));
+    return record?.body || null;
+  }
+  return planningRecords(records, type).find(item => item.id === id || item._recordId === id) || null;
+}
+function sourceContent(value) {
+  const content = Object.fromEntries(Object.entries(value || {}).filter(([key]) => !SOURCE_META_FIELDS.has(key) && key !== "sourceSnapshot"));
+  if (Array.isArray(value?.sourceRefs)) content.sourceRefs = sourceRefs(value);
+  if (Array.isArray(value?.evidenceIds)) content.evidenceIds = evidenceIds(value);
+  return content;
+}
+function sourceGraph(proposal, records) {
+  const missing = new Set(), included = new Set();
+  const visit = (ref, ancestors, depth) => {
+    const current = referencedRecord(ref, records);
+    if (!current) { missing.add(ref); return { ref, record: null }; }
+    // Cycles have a stable reference marker; all distinct records on the path
+    // were already included. Overly deep graphs block confirmation for review.
+    if (ancestors.has(ref)) return { ref, cycle: true };
+    if (included.has(ref)) return { ref, included: true };
+    if (depth > MAX_SOURCE_DEPTH || included.size >= 500) { missing.add(ref); return { ref, depthLimit: true }; }
+    included.add(ref); missing.delete(ref);
+    const path = new Set([...ancestors, ref]);
+    // A captured baseline contains its own frozen inputs and forecast. Its
+    // provenance references identify the historical inputs, not live dependencies.
+    const links = current.planningType === "forecast-baseline" ? [] : linkedRefs(current);
+    return { ref, record: sourceContent(current), sources: links.map(link => visit(link, path, depth + 1)) };
+  };
+  return { snapshot: linkedRefs(proposal).map(ref => visit(ref, new Set(), 0)), missingIds: [...missing].sort() };
+}
+
+// A confirmation covers the actual content and current linked sources, never a
+// caller-supplied stored snapshot or mutable revision/confirmation status.
 export function canonicalProposal(proposal, records = {}) {
   const content = { ...contentOf(proposal), evidenceIds: evidenceIds(proposal), evidenceSnapshot: currentEvidence(proposal, records) };
+  if (hasExtendedSources(proposal)) {
+    if (sourceRefs(proposal).length) content.sourceRefs = sourceRefs(proposal);
+    else delete content.sourceRefs;
+    content.sourceSnapshot = sourceGraph(proposal, records).snapshot;
+  } else if (Array.isArray(content.sourceRefs) && !content.sourceRefs.length) {
+    delete content.sourceRefs;
+  }
   return JSON.stringify(sortedValue(content));
 }
 
@@ -58,6 +131,8 @@ export function confirmationStatus(proposal, records = {}) {
   const id = proposal?.id || proposal?._recordId;
   const snapshot = canonicalProposal(proposal, records);
   const evidenceMissingIds = currentEvidence(proposal, records).filter(item => !item.record).map(item => item.id);
+  const linkedSources = hasExtendedSources(proposal) ? sourceGraph(proposal, records) : null;
+  const sourceMissingIds = linkedSources?.missingIds || [];
   const confirmedSeats = [], staleSeats = [];
   for (const seat of SEATS) {
     const vote = recordRows(records).find(record => record?.category === "vote" && record.object_id === `${seat}:confirm:${id}`);
@@ -66,11 +141,11 @@ export function confirmationStatus(proposal, records = {}) {
       typeof body.respondent_uid === "string" && body.respondent_uid.trim() &&
       typeof body.confirmedAt === "string" && Number.isFinite(Date.parse(body.confirmedAt));
     if (!validIdentity || body.choice !== "confirmed") continue;
-    if (body.snapshot === snapshot && !evidenceMissingIds.length) confirmedSeats.push(seat);
+    if (body.snapshot === snapshot && !evidenceMissingIds.length && !sourceMissingIds.length) confirmedSeats.push(seat);
     else staleSeats.push(seat);
   }
   const missingSeats = SEATS.filter(seat => !confirmedSeats.includes(seat));
-  return { status: missingSeats.length ? "awaiting-partner" : "confirmed", confirmedSeats, missingSeats, staleSeats, evidenceMissingIds };
+  return { status: missingSeats.length ? "awaiting-partner" : "confirmed", confirmedSeats, missingSeats, staleSeats, evidenceMissingIds, ...(linkedSources ? { sourceMissingIds } : {}) };
 }
 
 function nonnegative(value) {
