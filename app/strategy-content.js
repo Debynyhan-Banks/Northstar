@@ -1,0 +1,331 @@
+// Partner-specific strategy discovery. Stable question IDs preserve earlier answers.
+export const GROUPS = [
+  { id: 'vision', title: 'Our vision and first revenue', sub: 'What each of us wants to build, and which path deserves a practical test.' },
+  { id: 'foundation', title: 'What we have today', sub: 'Your company knowledge and the records I need to start the business work.' },
+  { id: 'services', title: 'Services we can deliver', sub: 'Match our initial offer to actual HVAC capability, time, people and customer needs.' },
+  { id: 'estimating', title: 'Pricing, estimating and approvals', sub: 'Turn a lead into a reviewed, profitable proposal with clear ownership.' },
+  { id: 'finance', title: 'Cash, economics and risk', sub: 'Understand startup costs, job economics and the commitments each of us can support.' },
+  { id: 'partnership', title: 'Our roles and working agreement', sub: 'Clarify what working the business means, our authority and the support we need.' },
+  { id: 'website', title: 'Customers, website and systems', sub: 'Design how customers find us and how work and information move through the business.' },
+  { id: 'priorities', title: 'Our first 90 days', sub: 'Choose a manageable test, assign the work and agree what evidence will show progress.' },
+];
+
+export const KNOWN_CONTEXT = [
+  { id: 'christian', title: 'Christian leads the company', detail: 'Christian, you are president of C.F. Mechanical and work in HVAC. I want us to clarify the leadership, technical responsibilities and authority you want to retain as we grow.' },
+  { id: 'employment', title: 'Christian is currently working', detail: 'You are currently employed. Our operating plan needs to fit your actual availability and any constraints you need to confirm.' },
+  { id: 'debynyhan', title: 'Christian asked Debynyhan to work the business', detail: 'You asked me to work the business. I want us to agree on what I should lead, which decisions I can make, the time and resources available, and how this will work for both of us.' },
+  { id: 'residential', title: 'Residential work is an idea to evaluate', detail: 'I want us to consider residential HVAC as an initial source of revenue. I need your view on whether it is practical, what work we could deliver and the conditions for trying it.' },
+  { id: 'union', title: 'Christian suggested union membership', detail: 'You suggested that I join a union. I want to understand the reason and intended role, and work through my questions before I decide.' },
+];
+
+export const QUESTIONS = [
+  {
+    id: 'three_year', group: 'vision', type: 'long', audience: 'both', compare: false,
+    label: 'Where do we each want C.F. Mechanical to be in three years?',
+    labels: { christian: 'Christian, what is your three-year vision for C.F. Mechanical?', growth: 'What is my own three-year vision for C.F. Mechanical?' },
+    hint: 'Describe the customers, service mix, scale, reputation and working life you want. Include what you do not want the business to become.',
+  },
+  {
+    id: 'primary_goal', group: 'vision', type: 'single', audience: 'both', compare: true,
+    label: 'What should be our highest priority right now?',
+    labels: { christian: 'Christian, which priority best matches your plan for the company right now?', growth: 'Which priority do I believe we should pursue first?' },
+    options: ['Build a steady commercial customer base', 'Win larger mechanical construction bids', 'Develop recurring service and maintenance revenue', 'Build a specialized industrial or data-center practice', 'Improve the company foundation before pursuing growth', 'Test residential HVAC work to establish early revenue'],
+    hint: 'Choose a starting priority, then explain why it is the best use of our current capacity and cash.',
+  },
+  {
+    id: 'target_markets', group: 'vision', type: 'multi', audience: 'both', compare: true,
+    label: 'Which customers should we focus on first?',
+    options: ['General contractors', 'Restaurants and commercial kitchens', 'Commercial property owners', 'Industrial facilities', 'Hospitals and healthcare', 'Schools and universities', 'Data centers', 'Government/public projects', 'Multifamily properties', 'Homeowners and residential landlords'],
+    hint: 'Identify the first customer group we can realistically reach and serve. Explain which groups should wait and why.',
+  },
+  {
+    id: 'three_year_role', group: 'vision', type: 'single', audience: 'christian', compare: false,
+    label: 'Christian, how do you want your own involvement to change as the business grows?',
+    options: ['Remain employed and oversee selected projects', 'Transition to working in C.F. Mechanical full time', 'Lead technical direction while foremen run sites', 'Undecided; depends on contract opportunities'],
+    hint: 'You are currently working. What business results, income or staffing would allow you to change that arrangement, and on what timeline?',
+  },
+  {
+    id: 'success_definition', group: 'vision', type: 'long', audience: 'both', compare: false,
+    label: 'What would make our first year a success?',
+    labels: { christian: 'Christian, what results would make the first year successful for you?', growth: 'What results would make the first year successful for me?' },
+    hint: 'Suggest measurable targets for revenue, gross profit, cash collected, repeat customers and your own income or time. Identify assumptions behind the targets.',
+  },
+  {
+    id: 'residential_first', group: 'vision', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, could residential HVAC be a practical way for us to generate revenue first?',
+    hint: 'Which services and service area could we handle while you are working? Explain demand, available technicians, scheduling, callbacks, tools, startup cash and any restrictions to confirm. What must be true before we try it, and what would make you say no or stop the test?',
+  },
+  {
+    id: 'growth_strategy', group: 'vision', type: 'long', audience: 'growth', compare: false,
+    label: 'Why do I think residential work may be a useful starting point, and how would I test that idea?',
+    hint: 'State the customer problem, first offer, route to customers, expected time to cash and limits of a small test. Compare this with pursuing commercial work first, and list what I need Christian to validate.',
+  },
+  {
+    id: 'completed_project', group: 'foundation', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, which jobs has C.F. Mechanical itself completed, and what can we document?',
+    hint: 'For each company job, record scope, customer type, approximate value, dates, outcome and permission to use photos or references. Separate company contracts from work performed for an employer.',
+  },
+  {
+    id: 'company_assets', group: 'foundation', type: 'multi', audience: 'christian', compare: false,
+    label: 'Christian, which business foundations are already in place?',
+    options: ['Business bank account', 'General liability insurance', 'Ohio workers’ compensation coverage', 'Commercial auto coverage', 'Accountant or bookkeeper', 'Accounting software', 'Supplier accounts', 'Business credit line', 'Safety program', 'Current company portfolio', 'Bonding relationship'],
+    hint: 'Select only what exists today. In your notes, identify the account or document owner, status, renewal dates and any gaps. Do not enter account numbers or passwords.',
+  },
+  {
+    id: 'registration_details', group: 'foundation', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, what licenses, registrations and qualifications does the company hold today?',
+    hint: 'Our earlier notes report Ohio license 50350 with an October 17, 2027 expiration; please confirm against the current record. List exact classifications, local registrations and which planned residential or commercial services they cover.',
+  },
+  {
+    id: 'past_contacts', group: 'foundation', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, which existing customers, suppliers and industry relationships could we build on?',
+    hint: 'Include homeowners, property managers, general contractors and trade contacts where relevant. Who can I contact with your agreement, how strong is the relationship, and what opportunity or introduction is appropriate?',
+  },
+  {
+    id: 'business_readiness', group: 'foundation', type: 'long', audience: 'growth', compare: false,
+    label: 'What business records, access and introductions do I need from Christian to get started?',
+    hint: 'Prioritize what I need to organize the company, contact customers and prepare work. For each request, explain its purpose, who can provide it and a realistic handoff date. Record access needs, not passwords.',
+  },
+  {
+    id: 'preferred_services', group: 'services', type: 'multi', audience: 'both', compare: true,
+    label: 'Which services should we offer first?',
+    labels: { christian: 'Christian, which services do you recommend we offer first?', growth: 'Which initial services do I think fit our customer and revenue strategy?' },
+    options: ['Commercial HVAC installations', 'Rooftop units and replacements', 'Commercial kitchen hoods and ventilation', 'Ductwork and sheet metal', 'Industrial ventilation', 'Refrigeration', 'Hydronic piping and pumps', 'Chillers / mission-critical cooling', 'Mechanical service and maintenance', 'Other (explain below)', 'Residential HVAC service and repairs', 'Residential HVAC replacements', 'Residential maintenance plans'],
+    hint: 'Choose a focused starting offer. Explain what should wait, what customer problem it solves and which capabilities or resources still need confirmation.',
+  },
+  {
+    id: 'special_capabilities', group: 'services', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, what HVAC work can we confidently deliver with the people and equipment available now?',
+    hint: 'Describe technical strengths, diagnostic and installation capability, tools, vehicles and qualified help. Separate your experience from the company\'s completed work, and identify work we should not accept yet.',
+  },
+  {
+    id: 'labor_model', group: 'services', type: 'single', audience: 'christian', compare: false,
+    label: 'Christian, what staffing model is feasible for our first jobs?',
+    options: ['Union workforce when contracts justify it', 'Small regular W-2 crew plus union labor as needed', 'Qualified subcontractors for complementary trades', 'Build crews gradually based on contract awards', 'Not yet determined'],
+    hint: 'Explain who is actually available, expected cost, scheduling and qualifications. If a smaller residential arrangement makes more sense, describe it in your own words.',
+  },
+  {
+    id: 'site_supervision', group: 'services', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, who will deliver and supervise jobs while you are at work?',
+    hint: 'Cover normal service hours, urgent calls, site supervision, quality checks, customer questions and callbacks. State your own availability, a backup person and any employment or union constraints you need to confirm.',
+  },
+  {
+    id: 'contract_range', group: 'services', type: 'single', audience: 'both', compare: true,
+    label: 'What contract size should we initially target?',
+    options: ['Under $25,000', '$25,000–$75,000', '$75,000–$150,000', '$150,000–$300,000', 'Over $300,000', 'Assess capacity before choosing a range'],
+    hint: 'Explain how the range fits delivery capacity and cash requirements. If we test residential service, describe the typical job value and daily volume instead.',
+  },
+  {
+    id: 'estimating_background', group: 'estimating', type: 'long', audience: 'both', compare: false,
+    label: 'What relevant estimating experience can each of us contribute?',
+    labels: { christian: 'Christian, what experience do you have estimating and pricing mechanical work?', growth: 'What experience can I bring to organizing estimates, comparing quotes and managing bid submissions?' },
+    hints: { christian: 'Include residential pricing where relevant, takeoffs, labor hours, materials, specifications, subcontractor quotes and past estimating tools.', growth: 'Describe my business, analytical or software experience, what I can learn and where I will need Christian\'s technical review. I do not need to claim HVAC expertise I do not have.' },
+  },
+  {
+    id: 'software_budget', group: 'estimating', type: 'single', audience: 'both', compare: true,
+    label: 'What monthly estimating-software budget should we plan around?',
+    options: ['Under $100', '$100–$300', '$300–$750', 'Over $750', 'Review product options before setting a budget'],
+    hint: 'Consider our first service mix, users, training, setup fees and likely bid volume. Explain what the expense must help us achieve before we commit.',
+  },
+  {
+    id: 'estimating_needs', group: 'estimating', type: 'multi', audience: 'both', compare: true,
+    label: 'Which estimating capabilities do we actually need for our initial work?',
+    options: ['PDF digital takeoffs', 'HVAC and ductwork assemblies', 'Pipe and fittings libraries', 'Labor-hour estimating', 'Supplier pricing and quote comparison', 'Revision/addendum tracking', 'Proposal generation', 'Team collaboration', 'Accounting export', 'Residential service pricing and equipment replacement quotes'],
+    hints: { christian: 'Select what is needed for accurate technical scope and pricing. Distinguish launch requirements from capabilities for later commercial work.', growth: 'Select what I need to prepare, track and hand off estimates. Explain the information Christian must supply and the outputs we must keep.' },
+  },
+  {
+    id: 'technical_signoff', group: 'estimating', type: 'single', audience: 'both', compare: true,
+    label: 'How should technical reviews and final quote or bid approvals work?',
+    options: ['Both review and approve every bid', 'Business lead prepares; Christian approves scope and price', 'Separate approval thresholds based on contract size', 'Decide after we test the first estimating workflow'],
+    hint: 'Explain who can prepare, change and release a quote; response times; and which commitments always need both of us. Include smaller service quotes if we pursue residential work.',
+  },
+  {
+    id: 'bid_go_no_go', group: 'estimating', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, what technical and delivery checks must pass before we quote or accept work?',
+    hint: 'Define when you need a site visit or technical review, how you validate labor and materials, and what risks would make us decline. Include exclusions, subcontractors, warranty and a realistic delivery date.',
+  },
+  {
+    id: 'estimating_workflow', group: 'estimating', type: 'long', audience: 'growth', compare: false,
+    label: 'How will I organize a repeatable process from inquiry to approved quote?',
+    hint: 'Describe intake, qualification, site information, estimate preparation, supplier quotes, Christian\'s review, final approval, customer follow-up and version control. Define a sample job we can use to test the process and software.',
+  },
+  {
+    id: 'capital_available', group: 'finance', type: 'single', audience: 'christian', compare: false,
+    label: 'Christian, how much company working capital is realistically available for our first projects?',
+    options: ['Under $5,000', '$5,000–$20,000', '$20,000–$50,000', 'More than $50,000', 'Prefer to discuss privately before entering an amount'],
+    hint: 'Explain when the funds are available, existing commitments and any limits. Distinguish cash on hand from credit that has not been approved or money we have not agreed to contribute.',
+  },
+  {
+    id: 'cash_requirements', group: 'finance', type: 'multi', audience: 'growth', compare: false,
+    label: 'Which financial processes do I need to organize first?',
+    options: ['Business banking/bookkeeping', 'Supplier credit', 'Business line of credit', 'Bonding prequalification', 'Cash-flow forecasting', 'Insurance and workers’ compensation', 'Contract/job-cost accounting', 'Prevailing-wage payroll processes', 'Customer deposits, invoicing and collections', 'Residential job pricing and service margins'],
+    hint: 'Use Christian\'s current-business answers to distinguish what needs setup from what needs access or improvement. Identify the accountant or other specialist support we need.',
+  },
+  {
+    id: 'funding_preference', group: 'finance', type: 'single', audience: 'both', compare: true,
+    label: 'What is our preferred approach to funding jobs as we grow?',
+    options: ['Start with smaller self-financed contracts', 'Supplier credit and negotiated progress payments', 'Working-capital lender or line of credit', 'Partner with an established contractor', 'Evaluate all options based on each project'],
+    hint: 'Explain the financing conditions you would accept, the cash reserve we need and the point at which we should delay or decline a job.',
+  },
+  {
+    id: 'spending_approval', group: 'finance', type: 'long', audience: 'both', compare: false,
+    label: 'What spending, borrowing and contract commitments should require both of us to approve?',
+    hint: 'Propose dollar thresholds, permitted routine spending, who records approval and what happens in an urgent situation. Identify any commitments you would not make. An answer records a preference; it does not authorize a purchase.',
+  },
+  {
+    id: 'startup_economics', group: 'finance', type: 'long', audience: 'growth', compare: false,
+    label: 'What must our first service or project earn for the business to be worthwhile?',
+    hint: 'Outline a simple base, low-demand and high-cost case: selling price, labor, materials, travel, overhead, callback allowance, gross profit and time to collect cash. Mark unknowns for Christian to validate and estimate the work volume needed to cover monthly costs.',
+  },
+  {
+    id: 'compensation_expectations', group: 'finance', type: 'long', audience: 'both', compare: false,
+    label: 'What does each of us need to agree about pay, contributions and future ownership?',
+    labels: { christian: 'Christian, what arrangement do you have in mind for my work, your work and the money each of us contributes?', growth: 'What compensation, contribution and ownership expectations do I need to discuss before taking on the business work?' },
+    hint: 'Distinguish current ownership from a proposal. Describe wages or fees, reimbursement, profit distribution, timing and what happens before the company can pay reliably. Record issues that need a written agreement or professional advice.',
+  },
+  {
+    id: 'financial_risk', group: 'finance', type: 'long', audience: 'both', compare: false,
+    label: 'What financial and personal limits do we each need the plan to respect?',
+    hint: 'Consider money and unpaid time you can afford to risk, outside income, personal guarantees, debt, minimum reserves and a point for pausing the plan. Explain your own limits without assuming the other partner\'s agreement.',
+  },
+  {
+    id: 'partner_role_title', group: 'partnership', type: 'long', audience: 'both', compare: false,
+    label: 'What title, role and responsibilities does each of us want to hold?',
+    labels: { christian: 'Christian, please confirm your title as president and the role you want to hold as we build the business.', growth: 'What title, role and responsibilities do I want to hold as Debynyhan Banks?' },
+    hints: { christian: 'Clarify the technical, leadership, customer and field responsibilities you intend to keep, what you want to delegate and what you want my role to be.', growth: 'Describe the business responsibilities I am willing and able to own, where I need authority and training, and what I am not proposing to take on.' },
+  },
+  {
+    id: 'union_membership', group: 'partnership', type: 'long', audience: 'both', compare: false,
+    label: 'What do we need to clarify about Christian\'s suggestion that I join a union?',
+    labels: { christian: 'Christian, when you suggested I join a union, what did you mean and how would it fit the work you want me to do?', growth: 'What questions or concerns do I have about Christian\'s suggestion that I join a union?' },
+    hints: { christian: 'Name the union or local, intended role, reason for the suggestion, eligibility, training, costs, expected benefits and timing. Explain how membership relates to running the business, and which details still need confirmation.', growth: 'Explain my understanding, interest and concerns about the role, time, costs and relevance to my responsibilities. List what I need Christian or the union to explain before I decide.' },
+  },
+  {
+    id: 'business_lead_scope', group: 'partnership', type: 'multi', audience: 'both', compare: true,
+    label: 'Which parts of the business should Debynyhan lead?',
+    labels: { christian: 'Christian, which parts of the business do you want me to lead?', growth: 'Which parts of the business am I prepared to lead?' },
+    options: ['Business administration', 'Long-term strategy', 'Website, branding and marketing', 'Customer acquisition and GC relationships', 'Estimating software implementation', 'Bid intake and submission administration', 'Accounting and financial planning coordination', 'Vendor and supplier relationships', 'Project management systems', 'Hiring and HR administration', 'Residential customer intake, scheduling and follow-up'],
+    hint: 'Identify launch priorities, what needs shared support and what should wait. Explain the authority, information and resources required for the responsibilities selected.',
+  },
+  {
+    id: 'technical_lead_scope', group: 'partnership', type: 'multi', audience: 'christian', compare: false,
+    label: 'Christian, which technical and delivery responsibilities will you lead directly?',
+    options: ['Technical scope review', 'Licensed trade supervision', 'Field operations and quality', 'Workforce and union coordination', 'Safety and compliance', 'Supplier technical selections', 'Construction scheduling', 'Technical estimator reviews', 'Customer/project site meetings', 'Residential diagnostics, service standards and callback support'],
+    hint: 'For any responsibility you will not handle personally, name the qualified person or capacity we still need to establish.',
+  },
+  {
+    id: 'joint_decisions', group: 'partnership', type: 'multi', audience: 'both', compare: true,
+    label: 'Which business decisions should we always make together?',
+    options: ['Final bids and major contracts', 'New services or target markets', 'Financing, debt and guarantees', 'Significant purchases', 'Hiring management roles', 'Major website and marketing direction', 'New ownership arrangements', 'Annual budget and strategy'],
+    hint: 'Explain the boundaries between routine delegated decisions, consultation and approval. Include what happens when we disagree or one of us is unavailable.',
+  },
+  {
+    id: 'meeting_rhythm', group: 'partnership', type: 'single', audience: 'both', compare: true,
+    label: 'What meeting rhythm can we both maintain?',
+    options: ['Weekly 30-minute meeting', 'Weekly 60-minute meeting', 'Twice-monthly working meeting', 'As needed plus shared dashboard'],
+    hint: 'Propose a day, time, response expectation for urgent questions and the numbers or decisions we should review together.',
+  },
+  {
+    id: 'partner_expectations', group: 'partnership', type: 'long', audience: 'both', compare: false,
+    label: 'What do we each need for this working relationship to succeed?',
+    hint: 'Describe how we should communicate, honor commitments, give feedback, resolve disagreement and revisit the arrangement if circumstances change. Identify expectations we should write down before launch.',
+  },
+  {
+    id: 'business_mandate', group: 'partnership', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, when you ask me to work the business, what exactly do you want me to accomplish and decide?',
+    hint: 'Describe the first outcomes, the decisions I can make independently, available budget, access and introductions. What support and response time can I count on from you while you are working?',
+  },
+  {
+    id: 'skills_support', group: 'partnership', type: 'long', audience: 'growth', compare: false,
+    label: 'What strengths, learning needs and support do I bring to this role?',
+    hint: 'Describe my business, strategy, technology and organizational strengths, the work I can own now and the training or help I need. State what would make the role manageable and sustainable for me.',
+  },
+  {
+    id: 'brand_position', group: 'website', type: 'single', audience: 'both', compare: true,
+    label: 'How should we describe C.F. Mechanical to the customers we want first?',
+    options: ['Commercial mechanical contractor', 'Commercial and industrial HVAC specialist', 'Full-service mechanical construction partner', 'Specialized ventilation and kitchen hood contractor', 'Decide after analyzing market opportunities', 'Residential HVAC service and replacement company', 'Residential and commercial HVAC company'],
+    hint: 'Explain the customer promise, service area and proof we can support today. Our long-term positioning may be broader than our first offer.',
+  },
+  {
+    id: 'website_priority', group: 'website', type: 'single', audience: 'growth', compare: false,
+    label: 'What should our first public website accomplish for the business?',
+    options: ['Help general contractors prequalify us', 'Generate customer and bid requests', 'Communicate capabilities and experience', 'Establish credibility and professional presence', 'All of the above, with priorities to be determined', 'Generate residential service and replacement inquiries'],
+    hint: 'Describe the main customer action, who receives the inquiry, the expected response time and how we will know whether the site is helping.',
+  },
+  {
+    id: 'marketing_assets', group: 'website', type: 'multi', audience: 'christian', compare: false,
+    label: 'Christian, what approved material can I use to present the company accurately?',
+    options: ['Company logo', 'Domain name', 'Business email', 'Project photos (authorized)', 'Completed-project reference', 'Leadership biographies', 'License/insurance information', 'Safety qualifications', 'Existing brochures or proposals'],
+    hint: 'Identify where each item is held, whether it is current and permission to publish it. Include the company contact details and service areas you can confirm.',
+  },
+  {
+    id: 'brand_ideas', group: 'website', type: 'long', audience: 'growth', compare: false,
+    label: 'What brand message and customer experience do I propose for C.F. Mechanical?',
+    hint: 'Describe the tone, visual direction, customer promise and examples I find useful. Explain how the message fits Christian\'s capabilities and our agreed starting market; list any claims that still need his confirmation.',
+  },
+  {
+    id: 'customer_acquisition', group: 'website', type: 'long', audience: 'growth', compare: false,
+    label: 'How will I find and follow up with our first customers?',
+    hint: 'Choose a small number of channels for the first test, such as agreed introductions, local outreach or contractor relationships. Set a time or spending limit, lead qualification rules, follow-up ownership and measures from inquiry to cash collected.',
+  },
+  {
+    id: 'systems_workflow', group: 'website', type: 'long', audience: 'growth', compare: false,
+    label: 'How should information move through the business from first inquiry to paid job and follow-up?',
+    hint: 'Map customer intake, scheduling, technical review, quote approval, job handoff, work evidence, invoicing, collection and maintenance follow-up. Identify the person responsible at each step and where we need a reliable record or alert.',
+  },
+  {
+    id: 'systems_data_access', group: 'website', type: 'multi', audience: 'growth', compare: false,
+    label: 'Which capabilities do our business systems need at launch?',
+    options: ['Shared customer and opportunity records', 'Scheduling and job status', 'Quote versions and approval history', 'Job costs, invoices and payment status', 'Mobile access for field updates', 'Partner accounts with appropriate permissions', 'Document and photo organization', 'Reminders and overdue follow-ups', 'Exports, backups and recovery', 'Dashboard of agreed business measures'],
+    hint: 'Separate essentials from later improvements. Explain who needs to see or change each kind of information, what must remain private and what we can handle manually at first.',
+  },
+  {
+    id: 'systems_success', group: 'website', type: 'long', audience: 'growth', compare: false,
+    label: 'How will I choose, test and maintain the tools we use?',
+    hint: 'Set the total monthly tool budget and required integrations or exports. Describe a realistic end-to-end test, mobile usability, access removal, backup/recovery checks, who owns the accounts and a fallback if a tool fails. Measure time saved or fewer missed steps before adding complexity.',
+  },
+  {
+    id: 'ninety_success', group: 'priorities', type: 'multi', audience: 'both', compare: true,
+    label: 'Which outcomes should we prioritize during the first 90 days?',
+    options: ['Document business readiness', 'Define responsibilities and priorities', 'Launch a professional website', 'Choose/test estimating software', 'Create a capability statement', 'Build a GC prospect list', 'Submit qualified prequalification packages', 'Submit feasible commercial bids', 'Establish a supplier/financing plan', 'Create a sustainable project-delivery process', 'Validate a residential HVAC offer', 'Complete and collect payment for suitable first jobs', 'Establish a simple weekly business dashboard'],
+    hint: 'Choose a realistic short list. For your top three, describe a measurable outcome, an owner, evidence and a target week. Treat revenue assumptions as estimates until tested.',
+  },
+  {
+    id: 'weekly_time', group: 'priorities', type: 'single', audience: 'both', compare: false,
+    label: 'How much time can each of us realistically dedicate each week?',
+    options: ['Less than 5 hours', '5–10 hours', '10–15 hours', '15–25 hours', 'More than 25 hours', 'Varies by week'],
+    hints: { christian: 'Include when you can review quotes, answer technical questions, visit jobs and deliver work around current employment. Identify weeks or hours when you are unavailable.', growth: 'Describe my available working hours, other commitments and what workload I can sustain. Include time for learning and the support I need to meet deadlines.' },
+  },
+  {
+    id: 'roadblocks', group: 'priorities', type: 'long', audience: 'both', compare: false,
+    label: 'What could block our progress, and what would help us respond?',
+    hint: 'Identify the most likely obstacle, its early warning sign, a person who can resolve it and a fallback. Include unresolved questions we must answer before relying on the plan.',
+  },
+  {
+    id: 'first_actions', group: 'priorities', type: 'long', audience: 'both', compare: false,
+    label: 'What are the first three actions we should agree to take?',
+    labels: { christian: 'Christian, what are the first three actions you will take or help me complete?', growth: 'What are the first three actions I am prepared to own?' },
+    hint: 'For each action, state an owner, target week, dependency and evidence of completion. Distinguish a proposal from a commitment we have both accepted.',
+  },
+  {
+    id: 'launch_gates', group: 'priorities', type: 'long', audience: 'christian', compare: false,
+    label: 'Christian, what must be ready before we accept our first new job under this plan?',
+    hint: 'Define the minimum service, staffing, licensing, insurance, pricing, cash and customer-support conditions. Who will verify each one, and when can we review a real sample opportunity together?',
+  },
+  {
+    id: 'growth_execution', group: 'priorities', type: 'long', audience: 'growth', compare: false,
+    label: 'What will my first 13-week execution plan and weekly dashboard look like?',
+    hint: 'Sequence setup, customer testing, the first deliverable jobs and a review of results. Propose a small set of measures: qualified inquiries, quote turnaround, accepted work, gross profit, cash collected, callbacks and overdue commitments. State where each measure comes from, who updates it and what result would change our plan.',
+  },
+];
+
+export const STRATEGY_TOPICS = [
+  { id: 'direction', title: 'Our direction', description: 'Compare our visions, first-year outcomes and the priority we each want to pursue.', christian: ['three_year', 'primary_goal', 'target_markets', 'success_definition', 'three_year_role'], growth: ['three_year', 'primary_goal', 'target_markets', 'success_definition'], decisionId: 'focus' },
+  { id: 'first_revenue', title: 'Our first revenue path', description: 'Connect Debynyhan\'s residential-first idea with Christian\'s feasibility assessment and our initial service choices.', christian: ['residential_first', 'preferred_services', 'contract_range'], growth: ['growth_strategy', 'preferred_services', 'contract_range', 'startup_economics'], decisionId: 'launch_path' },
+  { id: 'readiness', title: 'Delivery readiness', description: 'Use Christian\'s facts to identify the records, people and launch conditions still needed.', christian: ['completed_project', 'company_assets', 'registration_details', 'special_capabilities', 'labor_model', 'site_supervision', 'launch_gates'], growth: ['business_readiness', 'roadblocks'], decisionId: 'sizing' },
+  { id: 'estimating', title: 'Reliable quotes and approvals', description: 'Bring technical requirements and Debynyhan\'s workflow together before committing to software or releasing quotes.', christian: ['estimating_background', 'estimating_needs', 'software_budget', 'technical_signoff', 'bid_go_no_go'], growth: ['estimating_background', 'estimating_needs', 'software_budget', 'technical_signoff', 'estimating_workflow'], decisionId: 'estimating' },
+  { id: 'economics', title: 'Cash and a workable business model', description: 'Connect actual working capital with job economics, compensation expectations and the limits each of us needs respected.', christian: ['capital_available', 'funding_preference', 'spending_approval', 'compensation_expectations', 'financial_risk'], growth: ['cash_requirements', 'startup_economics', 'funding_preference', 'spending_approval', 'compensation_expectations', 'financial_risk'], decisionId: 'cash_rules' },
+  { id: 'working_agreement', title: 'Our working agreement', description: 'Clarify Christian\'s mandate, Debynyhan\'s responsibilities, technical ownership and the union suggestion.', christian: ['partner_role_title', 'business_mandate', 'business_lead_scope', 'technical_lead_scope', 'union_membership', 'joint_decisions', 'partner_expectations'], growth: ['partner_role_title', 'business_lead_scope', 'skills_support', 'union_membership', 'joint_decisions', 'partner_expectations'], decisionId: 'operating_mandate' },
+  { id: 'customer_systems', title: 'Customers and business systems', description: 'Use confirmed relationships and company evidence to build a practical customer journey, website and operating workflow.', christian: ['past_contacts', 'marketing_assets', 'brand_position'], growth: ['brand_position', 'website_priority', 'brand_ideas', 'customer_acquisition', 'systems_workflow', 'systems_data_access', 'systems_success'] },
+  { id: 'execution', title: 'Our 90-day commitments', description: 'Turn our agreed priorities and available time into owned work, evidence and a weekly review of results.', christian: ['ninety_success', 'weekly_time', 'meeting_rhythm', 'roadblocks', 'first_actions', 'launch_gates'], growth: ['ninety_success', 'weekly_time', 'meeting_rhythm', 'roadblocks', 'first_actions', 'growth_execution'], decisionId: 'roadmap' },
+];

@@ -1,20 +1,25 @@
 # C.F. Mechanical — Business Discovery & Growth Workspace
 
-This is a professional, mobile-friendly two-partner planning portal for **C.F. Mechanical, LLC**. It is designed to collect Christian Okoh's and Debynyhan Banks's views **before** defining strategy and SMART goals. It intentionally does not use the language of a trial, legal agreement, or employee assessment.
+This is the private, mobile-friendly planning workspace for **Christian Okoh and Debynyhan Banks** at **C.F. Mechanical, LLC**, hosted at [therealfishandgrits.com](https://therealfishandgrits.com/). It connects Christian's company and HVAC knowledge with Debynyhan's plan for working the business, using Debynyhan's voice when addressing Christian.
+
+The starting context is explicit: Christian is president, currently employed and has asked Debynyhan to work the business. The partners still need to define their responsibilities and authority. Residential HVAC as an initial revenue source is **an idea to evaluate**, and Christian's suggestion that Debynyhan join a union needs clarification. Neither is presented as an agreed strategy or commitment.
 
 ## What is built
 
-- 37 discovery questions in eight topics, with individual answers for each partner
-- A side-by-side alignment report identifying shared priorities, differences and open questions
-- Five shared-decision topics with independent partner selections
-- An editable 13-week Gantt chart with proposed tasks, owners, weeks, statuses, dependencies and completion evidence
+- **53 unique discovery questions in eight groups**, routed by role: **40 for Christian and 38 for Debynyhan**. Twenty-five questions invite both perspectives; other questions ask the person who holds the relevant knowledge or responsibility.
+- Christian records existing company facts, technical capability, field coverage, employment constraints and residential feasibility. Debynyhan develops the customer, financial, administrative and systems execution plan. Both record their own vision, expectations, available time and preferred shared decisions.
+- A text explanation field on **every choice question**. A partner can explain a selection or answer entirely in writing without selecting an unsuitable option; a notes-only response counts as input.
+- A **strategy dashboard with eight decision briefs**, bringing together each partner's relevant answers, missing inputs and links back to the question or decision. States such as **Waiting for input**, **Different choices**, **Discuss together** and **Inputs captured** describe the recorded inputs, not a decision's approval.
+- A side-by-side **Partner perspectives** view comparing shared strategic choices. Different roles, titles and time commitments are not scored as disagreements. Matching choices with different explanations still need discussion; written answers are conversation inputs.
+- **Nine decision topics** covering first revenue, the operating mandate, cash/job acceptance, systems, target market, project size, estimating, approvals and the roadmap. Each partner can record a selection, reasons, conditions or an alternative written proposal.
+- An editable **13-week Gantt chart** with proposed tasks, owners, weeks, statuses and dependencies. Work items include a success measure, baseline, target, latest measured result and completion evidence; recorded measures also appear on the dashboard.
 - A shared task board, task comments, weekly progress updates and recent activity log
-- A **real** bid-lead pipeline (initially empty, not filled with fictitious contracts)
+- A **revenue pipeline for real residential, commercial, industrial or other inquiries**, customers and GC bid opportunities, with market, scope, estimated value, deadline, stage and next-action notes
 - A company facts page identifying license **50350**, owner **Christian Okoh**, and reported expiration **October 17, 2027** (all to be verified before public use)
 - JSON backup/export (and local-preview import)
-- Optional private two-account Supabase backend and authenticated sync
+- A configured private two-account Supabase backend and authenticated shared persistence
 
-There are no finalized SMART goals yet. The starting Gantt chart is **clearly labeled provisional**. Both partners first answer questions, discuss strategy and then confirm specific targets.
+The redesign preserves the original **37 question IDs and existing option values**. Earlier answers to questions now assigned to the other partner remain saved and available for earlier-answer review and export. Existing tasks, comments, opportunities and decision preferences remain planning records. The starting roadmap and its commercial activities are editable proposals that the partners should review against their chosen revenue approach; the application does not automatically approve them or invent performance targets.
 
 ## Quick preview (no account needed)
 
@@ -22,34 +27,48 @@ Run `npm ci` and `npm run dev`, then open the displayed local URL. The included 
 
 **The preview is not shared between devices.** Do not send it to the partner and assume their answers will synchronize. Each browser would have its own isolated local storage.
 
-## Make the portal private and shared between two users
+## Shared workspace setup and onboarding
 
-1. Use the dedicated C.F. Mechanical Supabase project. Email confirmation and email/password sign-in are enabled, and its default site URL is configured. Configure custom SMTP before inviting a partner whose email is not a member of the Supabase organization: the default Supabase email sender cannot deliver confirmations to other addresses.
+The live workspace already uses its dedicated **C.F. Mechanical Growth Workspace** Supabase project. Email confirmation, email/password sign-in and custom SMTP are configured. Email delivery, confirmation, invitations, two-account sign-in and shared updates were verified during the earlier live setup. This strategy/interface redesign uses the existing backend and does not require a database-schema or SMTP change.
+
+1. Open [https://therealfishandgrits.com/](https://therealfishandgrits.com/). The existing hosting address is [northstar-brief.debynyhan.chatgpt.site](https://northstar-brief.debynyhan.chatgpt.site/).
 2. The schema in `database/supabase-schema.sql` has been installed in that project. It creates tables, Row Level Security (RLS), and secure workspace create/join functions. Run it only when setting up a new empty project; it is not a repeatable migration.
 3. `public/portal-config.js` contains the project URL and **publishable key**. These values are intentionally public in client-side apps. **Never use the service-role/secret key in browser code.**
-4. Deploy the Vinext application through its existing hosting pipeline and serve it via HTTPS. The SQL file is source only and is not a public asset.
+4. The Vinext application uses its existing HTTPS hosting pipeline. The SQL file is source only and is not a public asset.
 5. First partner creates an account and confirms email, signs in, selects their identity, and **creates the C.F. Mechanical workspace**.
 6. That account opens **Workspace → Invite the second partner**, enters their email, and creates the invitation. This records an invitation in the private database; it **does not send an email automatically**. Send the website URL separately.
 7. The second partner registers with the **same invited email**, confirms email, signs in and chooses **Join my invitation**. Each partner's account is tied to their own role, and they cannot edit the other's discovery answers or decision selections.
 8. The portal checks for shared updates automatically every 20 seconds. Use the **Refresh shared data** button to refresh immediately.
 
-### Deployment caveats
+If a confirmation message does not appear in the inbox, check Spam; the earlier delivery test reached Gmail's Spam folder. Share the website link yourself after creating the database invitation; the invitation action does not send Christian an email.
 
-- This is a functional **starter application**, not yet a hosted production deployment. Complete email delivery and two-account testing before deploying it for shared use.
+## Planning and application limits
+
+- Answers, matching preferences and complete decision briefs are **planning inputs**, not accepted strategy, spending authority, signed agreements or automated approvals. The partners must discuss and confirm their actual commitments.
 - RLS protects the workspace data; do not disable it. The provided SQL enforces exactly two named seats and binds discovery answers/votes to the authenticated account. Owner invitations require an exact matching **verified** email address.
-- The system does not send email, integrate external bid portals, host project files, or include construction estimating engines. It tracks those workstreams.
+- Authentication confirmation email is configured. Workspace invitations and application updates do not send notification emails automatically.
+- The application does not integrate bid portals, accounting, scheduling, banking or estimating products; host project files; or perform mechanical takeoffs or construction estimates. It records the partners' plans, opportunities, measurements and links.
+- Business metrics and completion evidence are entered by the partners. The app does not automatically import business data, calculate audited revenue or profit, evaluate technical readiness or accept a job.
 - A public website for customer marketing is a **separate future deliverable**. This workspace is intended for private collaboration.
 - No service worker or advanced offline sync is installed. Use the JSON backup capability for independent copies of your planning records.
-- For a high-sensitivity or regulated deployment, add security review, reliable audit logging, backup/restore policy, and accessibility QA before putting confidential financial documents into the app.
+- Concurrent edits to the same shared task or opportunity use **last-writer-wins** behavior. Keep JSON backups of important records.
 
 ## Recommended first session
 
-Christian fills out his discovery questionnaire. Debynyhan Banks fills out their questionnaire separately. Compare results in Alignment, work through Decision Log, and revise the first 13-week roadmap together. Choose estimating software based on actual bidding needs and budget. Establish measurable SMART goals **after** the discovery responses are discussed.
+Christian and Debynyhan each complete the questions relevant to them, starting with the vision, residential feasibility, operating mandate and working arrangement. Use the dashboard's decision briefs to see the supporting inputs and gaps, compare shared choices in Partner perspectives and record preferences and conditions in Decisions. Revise the roadmap together, assign owners and add measurable targets with evidence. Discovery progress is guidance; it does not authorize a launch or require an automatic business decision when every answer is filled in.
+
+## Local checks
+
+Run `npm test` to build the application and run the automated tests, including role routing, notes-only completion, comparison/input-state behavior and persistence-queue checks. Run `npm run lint` for source linting. Browser verification should cover both partner identities, choice explanations, earlier answers, decision briefs, task measurements and the revenue pipeline.
 
 ## Files
 
 - `app/Questionnaire.tsx` and `app/growth-workspace.js` – application entry and logic
-- `app/globals.css` – responsive interface
+- `app/strategy-content.js` – partner-specific questions, known context and dashboard topic mappings
+- `app/discovery-model.js` – role routing, question wording, answer completion and comparison/input states
+- `app/globals.css` and `app/strategy.css` – responsive interface and strategy dashboard styles
+- `app/cloud-save-queue.js` – shared-save queue and retry handling
+- `tests/` – automated build, discovery-model and persistence checks
 - `public/portal-config.js` – public frontend connection configuration
 - `database/supabase-schema.sql` – private, two-user database schema and policies
 - `public/previous/` – previous questionnaire, available to recover drafts stored by the same browser
@@ -65,4 +84,4 @@ The previous questionnaire remains available at `/previous/`. Its draft is store
 
 ## Important shared-mode limitations
 
-Do not use the preview for real shared collaboration. Shared mode requires a configured Supabase project, verified accounts, two-person access testing, and successful synchronization testing before use. Concurrent edits of the same task or opportunity currently use last-writer-wins behavior. Keep JSON backups of important workspace data.
+Local preview remains isolated to its browser and is not a substitute for the hosted shared workspace. The configured shared workspace saves its records to the dedicated Supabase project, and each partner must use their own verified account and assigned identity. A brand-new backend project would require its own schema installation, SMTP setup and two-account access/synchronization testing; the existing live project's earlier verification is not evidence for a new project.
