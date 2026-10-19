@@ -12,8 +12,7 @@ export function renderWorkspaceNavigation({ nav, view, seat, idPrefix = 'desktop
   const partner = seat === 'christian' ? 'Debynyhan' : 'Christian';
   const primary = [['overview', 'Home'], ['discovery', 'My answers'], ['alignment', `Read ${partner}’s answers`], ['decisions', 'Decisions together']];
   const button = (key, label) => `<button type="button" class="nav-item ${view === key ? 'active' : ''}" data-view="${esc(key)}" ${view === key ? 'aria-current="page"' : ''}>${esc(label)}</button>`;
-  const toolsActive = !primary.some(([key]) => key === view);
-  return `<nav class="workspace-navigation" aria-label="Workspace"><div class="primary-navigation">${primary.map(([key, label]) => button(key, label)).join('')}</div><details class="all-tools" data-detail-id="${esc(idPrefix)}-all-tools" ${toolsActive ? 'open' : ''}><summary>All tools</summary>${TOOL_GROUPS.map(([title, keys]) => `<section class="tool-group"><h2>${esc(title)}</h2>${keys.filter(key => nav.some(item => item[0] === key)).map(key => button(key === 'overview' ? 'dashboard' : key, LABELS[key] || nav.find(item => item[0] === key)[2])).join('')}</section>`).join('')}</details></nav>`;
+  return `<nav class="workspace-navigation" aria-label="Workspace"><div class="primary-navigation">${primary.map(([key, label]) => button(key, label)).join('')}</div><details class="all-tools" data-detail-id="${esc(idPrefix)}-all-tools"><summary>All tools</summary>${TOOL_GROUPS.map(([title, keys]) => `<section class="tool-group"><h2>${esc(title)}</h2>${keys.filter(key => nav.some(item => item[0] === key)).map(key => button(key === 'overview' ? 'dashboard' : key, LABELS[key] || nav.find(item => item[0] === key)[2])).join('')}</section>`).join('')}</details></nav>`;
 }
 
 export function renderSimpleHome({ seat, ownProgress = {}, otherProgress = {}, introduction = '', unfinishedWork = '', nextAction = null }) {
