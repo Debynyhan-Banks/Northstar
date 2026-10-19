@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { questionsForSeat, questionText, questionHint, hasAnswer, responseAnswered, getResponse, completion, questionStatus, compareResponses, topicStatus } from "../app/discovery-model.js";
+import { questionsForSeat, questionText, questionHint, questionPrompt, questionHelpPrompts, hasAnswer, responseStatus, responseAnswered, getResponse, completion, questionStatus, compareResponses, topicStatus } from "../app/discovery-model.js";
 import { QUESTIONS as STRATEGY_QUESTIONS, STRATEGY_TOPICS } from "../app/strategy-content.js";
 
 const questions = [
@@ -158,4 +158,81 @@ test("strategy completion preserves old answers even after an earlier shared que
   for (const topic of STRATEGY_TOPICS) topicStatus(topic, STRATEGY_QUESTIONS, saved);
   compareResponses(STRATEGY_QUESTIONS, saved);
   assert.deepEqual(saved, original, "Dashboard and progress calculations must not delete or rewrite historical responses");
+});
+
+test("explicit response states retain text without treating drafts or unknowns as completed", () => {
+  for (const answerStatus of ["unanswered", "draft", "unknown", "skipped"]) {
+    const response = { answerStatus, value: "A retained installation plan", explanation: "Keep these notes", respondent_uid: "partner-a", updatedAt: "2026-10-19T12:00:00Z" };
+    const original = structuredClone(response);
+    assert.equal(responseStatus(response), answerStatus);
+    assert.equal(responseAnswered(response), false);
+    assert.deepEqual(response, original, "Status evaluation must not erase draft text or attribution");
+  }
+  assert.equal(responseStatus(null), "unanswered");
+  assert.equal(responseStatus([]), "unanswered");
+  assert.equal(responseStatus({ answerStatus: "answered", value: "   " }), "unanswered", "An empty completed flag cannot inflate progress");
+  assert.equal(responseStatus({ answerStatus: "answered", value: "Service and replacement", unknown: true, status: "unknown" }), "answered", "A new explicit answer supersedes legacy flags");
+  assert.equal(responseStatus({ answerStatus: "unrecognized", value: "A legacy answer" }), "answered", "Unknown metadata cannot make substantive legacy answers disappear");
+});
+
+test("legacy uncertainty-only answers stay unresolved while mixed substantive answers remain available", () => {
+  for (const value of ["Unknown", "Not sure yet", "Not yet determined", "I’m not sure yet", "I don't know.", ["Unknown", "Undecided"]]) {
+    assert.equal(responseStatus({ value }), "unknown", JSON.stringify(value));
+    assert.equal(responseAnswered({ value }), false);
+  }
+  assert.equal(responseStatus({ value: "", explanation: "Unknown" }), "unknown");
+  assert.equal(responseStatus({ value: ["Unknown", "Residential repairs"] }), "answered");
+  assert.equal(responseStatus({ value: "Not sure", explanation: "I can install full residential systems and want to discuss available hours." }), "answered");
+  assert.equal(responseStatus({ value: "Unknown customer demand will need a small test." }), "answered", "Unknown within a real answer is not an uncertainty-only response");
+  assert.equal(responseStatus({ unknown: true, value: "Retain this older note" }), "unknown");
+  assert.equal(responseStatus({ status: "unknown", explanation: "Need a supplier quote" }), "unknown");
+  for (const value of [0, false]) assert.equal(responseStatus({ value }), "answered", "A deliberate zero or false remains a substantive value");
+});
+
+test("draft and unknown answers keep completion and partner comparison pending without rewriting records", () => {
+  const saved = records([["christian", "sequence", "Pilot"], ["growth", "sequence", "Pilot"], ["growth", "time", "Ten hours"]]);
+  const growthResponse = saved["response|growth:sequence"].body;
+  const topic = { christian: ["sequence"], growth: ["sequence"] };
+  for (const answerStatus of ["draft", "unknown", "skipped"]) {
+    growthResponse.answerStatus = answerStatus;
+    const original = structuredClone(saved);
+    assert.deepEqual(completion(questions, saved, "growth"), { answered: 1, total: 4, percent: 25 });
+    assert.equal(compareResponses(questions, saved).find(pair => pair.q.id === "sequence").status, "pending");
+    assert.equal(topicStatus(topic, questions, saved).status, "pending");
+    assert.deepEqual(saved, original);
+  }
+  growthResponse.answerStatus = "answered";
+  assert.deepEqual(completion(questions, saved, "growth"), { answered: 2, total: 4, percent: 50 });
+  assert.equal(compareResponses(questions, saved).find(pair => pair.q.id === "sequence").status, "aligned");
+  assert.equal(topicStatus(topic, questions, saved).status, "ready");
+});
+
+test("readable questions preserve stable source wording and every word of optional help", () => {
+  const original = structuredClone(STRATEGY_QUESTIONS);
+  for (const seat of ["christian", "growth"]) {
+    for (const q of questionsForSeat(STRATEGY_QUESTIONS, seat)) {
+      const prompt = questionPrompt(q, seat);
+      assert.ok(prompt.length > 0 && prompt.length <= 105, `${q.id} needs a short prompt for ${seat}`);
+      const help = questionHelpPrompts(q, seat);
+      assert.equal(help.join(" "), questionHint(q, seat).trim(), `${q.id} must retain its complete guidance`);
+      assert.ok(help.every(part => part.length < 205), `${q.id} help should be manageable`);
+    }
+  }
+  const workflow = STRATEGY_QUESTIONS.find(q => q.id === "estimating_workflow");
+  assert.equal(questionText(workflow, "growth"), "How will I organize a repeatable process from inquiry to approved quote?");
+  assert.equal(questionPrompt(workflow, "growth"), "How will I turn an inquiry into an approved quote?");
+  assert.deepEqual(STRATEGY_QUESTIONS, original, "Readable rendering must not mutate IDs, audiences, source labels or options");
+  assert.equal(questionPrompt(questions[2], "christian"), "Which sequence can we deliver?", "Future questions keep their original seat-specific fallback");
+  assert.deepEqual(questionHelpPrompts({ hint: "Check availability. Record approval; Keep earlier notes." }, "growth"), ["Check availability.", "Record approval;", "Keep earlier notes."]);
+  assert.deepEqual(questionHelpPrompts({ label: "A question without help" }, "growth"), []);
+});
+
+test("Debynyhan's help recognizes residential technical and marketing experience without changing question IDs", () => {
+  const byId = new Map(STRATEGY_QUESTIONS.map(q => [q.id, q]));
+  const estimating = questionHint(byId.get("estimating_background"), "growth");
+  assert.match(estimating, /residential HVAC service and full-system installation experience/);
+  assert.match(estimating, /marketing experience with Eternity Mechanical/);
+  assert.doesNotMatch(estimating, /expertise I do not have/);
+  assert.match(questionHint(byId.get("brand_ideas"), "growth"), /our combined capabilities/);
+  assert.equal(byId.get("estimating_background").labels.growth, "What experience can I bring to organizing estimates, comparing quotes and managing bid submissions?", "Historical questionText remains exact");
 });

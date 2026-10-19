@@ -6,9 +6,14 @@ The starting context is explicit: Christian is president, currently employed and
 
 ## What is built
 
+- A readable **Home** with three next steps, grouped **All tools** navigation, and account-scoped Standard / Large / Extra large text preferences (18 / 20 / 24 CSS pixels).
+- **Guided discovery** starts with each partner's essential questions, one at a time. The full questionnaire and earlier answers remain accessible. Saved drafts, unknowns and skipped questions remain separate from completed answers.
+- **Staged planning forms** retain local drafts and resume their saved step. Customer plans use Customers → Services → Delivery → Money → Review. Shared records and joint confirmations remain distinct.
+- **Truthful save status and recovery:** failed writes retain a scoped device checkpoint. After a reload, recovered edits require review before replacing current shared records. Unfinished text remains included in backups and a labeled appendix in exported plans.
+
 - **53 unique discovery questions in eight groups**, routed by role: **40 for Christian and 38 for Debynyhan**. Twenty-five questions invite both perspectives; other questions ask the person who holds the relevant knowledge or responsibility.
-- Christian records existing company facts, technical capability, field coverage, employment constraints and residential feasibility. Debynyhan develops the customer, financial, administrative and systems execution plan. Both record their own vision, expectations, available time and preferred shared decisions.
-- A text explanation field on **every choice question**. A partner can explain a selection or answer entirely in writing without selecting an unsuitable option; a notes-only response counts as input.
+- Christian records existing company facts, technical capability, field coverage, employment constraints and residential feasibility. Debynyhan develops the customer, financial and systems execution plan and can describe their residential installation, service and Eternity Mechanical marketing experience. Both record their own vision, expectations, available time and preferred shared decisions.
+- A text explanation field on **every choice question**. A partner can explain a selection or answer entirely in writing without selecting an unsuitable option; a completed notes-only response counts as input. Explicit drafts and unknowns do not count as completed answers.
 - A **strategy dashboard with eight decision briefs**, bringing together each partner's relevant answers, missing inputs and links back to the question or decision. States such as **Waiting for input**, **Different choices**, **Discuss together** and **Inputs captured** describe the recorded inputs, not a decision's approval.
 - A side-by-side **Partner perspectives** view comparing shared strategic choices. Different roles, titles and time commitments are not scored as disagreements. Matching choices with different explanations still need discussion; written answers are conversation inputs.
 - **Nine decision topics** covering first revenue, the operating mandate, cash/job acceptance, systems, target market, project size, estimating, approvals and the roadmap. Each partner can record a selection, reasons, conditions or an alternative written proposal.
