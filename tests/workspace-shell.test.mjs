@@ -44,6 +44,7 @@ test('all tool destinations remain reachable without mixing up home and dashboar
   const html = renderWorkspaceNavigation({ nav, view: 'finance', seat: 'christian' });
   for (const [key] of nav) assert.ok(html.includes(`data-view="${key === 'overview' ? 'dashboard' : key}"`), key);
   assert.match(html, /data-view="overview"[^>]*>Home/);
-  assert.match(html, /class="all-tools"[^>]*open/);
+  assert.doesNotMatch(html, /class="all-tools"[^>]*open/);
   assert.match(html, /aria-current="page"[^>]*>Costs and cash planning/);
+  assert.doesNotMatch(renderWorkspaceNavigation({ nav, view: 'overview', seat: 'christian' }), /class="all-tools"[^>]*open/);
 });

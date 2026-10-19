@@ -203,6 +203,7 @@ td, th { padding: .7rem; }
   .readable-card-table td { border-bottom: 0; padding: .4rem; white-space: normal; }
   .mobile-cell-label { display: block; font-size: .9rem; font-weight: 750; color: #43586a; margin-bottom: .15rem; }
 }
+.decision[id], .partner-readonly-answer[id] { scroll-margin-block-start: 1rem; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
