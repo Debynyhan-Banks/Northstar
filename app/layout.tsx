@@ -3,6 +3,7 @@ import "./globals.css";
 import "./strategy.css";
 import "./planning.css";
 import "./guided-strategy.css";
+import "./readable-workspace.css";
 
 export const metadata: Metadata = {
   title: "C.F. Mechanical | Growth Workspace",

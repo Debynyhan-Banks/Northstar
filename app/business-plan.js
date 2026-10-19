@@ -1,4 +1,4 @@
-import { getResponse, questionsForSeat, questionText, responseAnswered } from './discovery-model.js';
+import { getResponse, questionsForSeat, questionText, responseStatus, responseAnswered } from './discovery-model.js';
 import { planningRecords, confirmationStatus, marketingMetrics } from './planning-model.js';
 import { calculateFinance } from './finance-model.js';
 import { renderStrategicBrief, renderOperatingCharter, renderSegmentAnalysis, renderWebsiteBrief, renderCapacityReview, renderPerformanceReview } from './strategy-brief.js';
@@ -60,8 +60,23 @@ function responseEntries(context, ids, includeMissing = false) {
 
 function partnerInputs(context, ids) {
   const entries = responseEntries(context, ids);
-  if (!entries.length) return '<p class="plan-missing">These partner inputs have not been recorded yet. Use Business discovery to capture each person’s own answer.</p>';
+  if (!entries.length) return '<p class="plan-missing">No completed partner answers are recorded for this section. Any saved drafts and unknown or skipped answers are kept in the unfinished-answers appendix.</p>';
   return `<p class="caption">Recorded partner inputs. Individual answers and matching preferences do not establish a joint decision; supporting facts still need evidence.</p>${entries.map(({ seat, question, response }) => `<article class="plan-input"><h4>${esc(nameOf(context, seat))} · ${esc(questionText(question, seat))}</h4>${present(response.value) ? `<p>${shown(response.value)}</p>` : ''}${present(response.explanation) ? `<p><strong>Explanation / written alternative:</strong> ${shown(response.explanation)}</p>` : ''}${reference('response', `${seat}:${question.id}`)}</article>`).join('')}`;
+}
+
+function unfinishedPartnerInputs(context) {
+  const labels = { draft: 'Draft — not marked answered', unknown: 'Not sure yet — unresolved', skipped: 'Skipped for now — unresolved', unanswered: 'Unanswered — retained notes' };
+  const entries = Object.values(context.records || {}).flatMap(record => {
+    if (record?.category !== 'response' || !record.body || typeof record.body !== 'object' || Array.isArray(record.body)) return [];
+    const response = record.body, status = responseStatus(response);
+    if (status === 'answered' || (status === 'unanswered' && !present(response.value) && !present(response.explanation))) return [];
+    const [seat, ...parts] = String(record.object_id || '').split(':'), questionId = parts.join(':');
+    const question = (context.questions || []).find(item => item.id === questionId);
+    const title = question ? questionText(question, seat) : questionId || record.object_id || 'Earlier question';
+    return [`<article class="plan-input"><h4>${esc(nameOf(context, seat))} · ${esc(title)}</h4><p><strong>${esc(labels[status] || 'Unresolved answer')}</strong></p>${present(response.value) ? `<p>${shown(response.value)}</p>` : ''}${present(response.explanation) ? `<p><strong>Explanation / written alternative:</strong> ${shown(response.explanation)}</p>` : ''}${reference('response', record.object_id)}</article>`];
+  });
+  if (!entries.length) return '';
+  return `<p>These saved responses are retained for review. They do not count as completed discovery, verified evidence or joint decisions, and are excluded from completed-answer conclusions elsewhere in this plan.</p>${entries.join('')}`;
 }
 
 function decisions(context, compact = false) {
@@ -225,6 +240,7 @@ function onePage(context, settings) {
 }
 
 function detailed(context, settings) {
+  const unfinished = unfinishedPartnerInputs(context);
   return `<article class="plan-detailed" id="plan-detailed"><h2>Our detailed business and marketing plan</h2>
     ${section('1. Executive summary and objectives', `${renderStrategicBrief(context)}<dl>${field('Proposed shared vision', settings.vision)}${field('Business objectives', settings.objectives)}${field('Initial offer', settings.initialOffer)}${field('Longer-term direction', settings.longTermDirection)}</dl>${partnerInputs(context, ['primary_goal', 'three_year', 'success_definition'])}`, 'plan-executive-summary')}
     ${section('2. Company position and delivery capabilities', `<p>Christian’s recorded company information and delivery assessment need supporting records. Scope must fit actual availability while Christian is employed.</p>${partnerInputs(context, ['completed_project', 'company_assets', 'registration_details', 'special_capabilities', 'labor_model', 'site_supervision', 'launch_gates'])}${evidence(context)}`, 'plan-capabilities')}
@@ -238,6 +254,7 @@ function detailed(context, settings) {
     ${section('10. Thirteen-week execution schedule', `<p>The schedule contains our saved work items. Entries remain proposed until the relevant direction and commitments are confirmed; completion status needs evidence.</p><dl>${field('Plan start date', settings.planStartDate)}</dl>${tasks(context)}`, 'plan-execution')}
     ${section('11. Twelve-month milestones', milestones(settings.monthMilestones), 'plan-milestones')}
     ${section('12. Sources, review and use', `<p>This plan is assembled deterministically from saved discovery responses, evidence records, research, financial inputs, strategic proposals and tasks. References identify the underlying record so we can review the source. It does not infer demand, independently verify claims or convert preferences into agreements.</p><p>Review new evidence, current financial assumptions, outstanding partner confirmations and actual results together before making commitments. Exported copies contain private workspace information; share deliberately.</p>`, 'plan-sources')}
+    ${unfinished ? section('Appendix: unfinished partner answers', unfinished, 'plan-unfinished-answers') : ''}
     </article>`;
 }
 

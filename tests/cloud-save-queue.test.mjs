@@ -45,3 +45,37 @@ test("concurrent flushes serialize edits in order", async () => {
   assert.deepEqual(batches, [[{ value: 1 }], [{ value: 2 }]]);
   assert.equal(queue.hasUnsaved(), false);
 });
+
+test("recovery snapshots include an in-flight save and prefer newer edits", async () => {
+  const first = deferred();
+  const queue = createSaveQueue({ isActive: () => true, saveRows: () => first.promise, onSaved: () => {}, onFailure: () => {} });
+  queue.enqueue('response', { value: 'initial' });
+  const save = queue.flush();
+  assert.deepEqual(queue.snapshot(), [{ value: 'initial' }]);
+  queue.enqueue('response', { value: 'new draft' });
+  assert.deepEqual(queue.snapshot(), [{ value: 'new draft' }]);
+  first.resolve();
+  await save;
+  assert.deepEqual(queue.snapshot(), [{ value: 'new draft' }]);
+});
+
+test("resetting for another account prevents an old failure from replaying or reporting saved", async () => {
+  const first = deferred(), notices = [];
+  const queue = createSaveQueue({ isActive: () => true, saveRows: () => first.promise, onSaved: () => notices.push('saved'), onFailure: () => notices.push('failed') });
+  queue.enqueue('previous', { account: 'previous' });
+  const save = queue.flush();
+  queue.reset();
+  queue.enqueue('current', { account: 'current' });
+  first.reject(new Error('old account offline'));
+  assert.equal(await save, false);
+  assert.deepEqual(queue.snapshot(), [{ account: 'current' }]);
+  assert.deepEqual(notices, []);
+});
+
+test("acknowledged rows disappear from recovery before the saved notification", async () => {
+  const seen = [];
+  const queue = createSaveQueue({ isActive: () => true, saveRows: async () => {}, onSaved: () => seen.push(queue.snapshot()), onFailure: () => {} });
+  queue.enqueue('answer', { value: 'yes' });
+  assert.equal(await queue.flush(), true);
+  assert.deepEqual(seen, [[]]);
+});

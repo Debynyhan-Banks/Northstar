@@ -119,7 +119,7 @@ export const QUESTIONS = [
     id: 'estimating_background', group: 'estimating', type: 'long', audience: 'both', compare: false,
     label: 'What relevant estimating experience can each of us contribute?',
     labels: { christian: 'Christian, what experience do you have estimating and pricing mechanical work?', growth: 'What experience can I bring to organizing estimates, comparing quotes and managing bid submissions?' },
-    hints: { christian: 'Include residential pricing where relevant, takeoffs, labor hours, materials, specifications, subcontractor quotes and past estimating tools.', growth: 'Describe my business, analytical or software experience, what I can learn and where I will need Christian\'s technical review. I do not need to claim HVAC expertise I do not have.' },
+    hints: { christian: 'Include residential pricing where relevant, takeoffs, labor hours, materials, specifications, subcontractor quotes and past estimating tools.', growth: 'Describe my residential HVAC service and full-system installation experience, marketing experience with Eternity Mechanical, and business, analytical or software experience. Explain what I can prepare and price, what I want to learn and when Christian\'s review would be useful.' },
   },
   {
     id: 'software_budget', group: 'estimating', type: 'single', audience: 'both', compare: true,
@@ -238,7 +238,7 @@ export const QUESTIONS = [
   {
     id: 'skills_support', group: 'partnership', type: 'long', audience: 'growth', compare: false,
     label: 'What strengths, learning needs and support do I bring to this role?',
-    hint: 'Describe my business, strategy, technology and organizational strengths, the work I can own now and the training or help I need. State what would make the role manageable and sustainable for me.',
+    hint: 'Describe my residential HVAC service and installation experience, marketing experience with Eternity Mechanical, and business, strategy, technology and organizational strengths. Explain the work I can own now and the training or help I need. State what would make the role manageable and sustainable for me.',
   },
   {
     id: 'brand_position', group: 'website', type: 'single', audience: 'both', compare: true,
@@ -261,7 +261,7 @@ export const QUESTIONS = [
   {
     id: 'brand_ideas', group: 'website', type: 'long', audience: 'growth', compare: false,
     label: 'What brand message and customer experience do I propose for C.F. Mechanical?',
-    hint: 'Describe the tone, visual direction, customer promise and examples I find useful. Explain how the message fits Christian\'s capabilities and our agreed starting market; list any claims that still need his confirmation.',
+    hint: 'Describe the tone, visual direction, customer promise and examples I find useful. Explain how the message fits our combined capabilities and agreed starting market; list any claims that still need confirmation.',
   },
   {
     id: 'customer_acquisition', group: 'website', type: 'long', audience: 'growth', compare: false,

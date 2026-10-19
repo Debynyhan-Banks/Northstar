@@ -33,6 +33,52 @@ test('empty plan is useful without inventing company readiness, revenue or appro
   assert.doesNotMatch(html, /<script|https:\/\/api\./);
 });
 
+test('unfinished discovery text survives HTML, print and text exports without becoming completed partner input', () => {
+  const ctx = context([
+    row('response', 'christian:three_year', { seat: 'christian', value: 'Draft vision: a manageable service company', explanation: 'Need to discuss working hours', answerStatus: 'draft' }),
+    row('response', 'growth:three_year', { seat: 'growth', value: 'Retained vision to revisit', explanation: 'Waiting to compare our priorities', answerStatus: 'unknown' }),
+    row('response', 'christian:residential_first', { seat: 'christian', value: 'Review installations after equipment inventory', answerStatus: 'skipped' }),
+    row('response', 'growth:startup_economics', { seat: 'growth', value: 'Base price still needs supplier quotes', answerStatus: 'unanswered' }),
+  ]);
+  const before = structuredClone(ctx.records);
+  for (const html of [renderBusinessPlan(ctx), exportBusinessPlan(ctx)]) {
+    const appendix = html.indexOf('id="plan-unfinished-answers"');
+    assert.ok(appendix > 0);
+    const conclusions = html.slice(0, appendix), retained = html.slice(appendix);
+    for (const text of ['Draft vision: a manageable service company', 'Need to discuss working hours', 'Retained vision to revisit', 'Review installations after equipment inventory', 'Base price still needs supplier quotes']) {
+      assert.ok(retained.includes(text), text);
+      assert.ok(!conclusions.includes(text), 'Unfinished answers must remain separate from completed-answer conclusions');
+    }
+    for (const label of ['Draft — not marked answered', 'Not sure yet — unresolved', 'Skipped for now — unresolved', 'Unanswered — retained notes']) assert.ok(retained.includes(label), label);
+    assert.ok(retained.includes('[response:christian:three_year]'));
+    assert.ok(retained.includes('[response:growth:startup_economics]'));
+    assert.match(retained, /do not count as completed discovery, verified evidence or joint decisions/);
+    assert.doesNotMatch(html, /Confirmed jointly for this saved version/);
+  }
+  const text = planText(ctx);
+  assert.match(text, /Appendix: unfinished partner answers/);
+  assert.match(text, /Draft vision: a manageable service company/);
+  assert.match(text, /Skipped for now — unresolved/);
+  assert.deepEqual(ctx.records, before);
+});
+
+test('unfinished appendix retains legacy IDs and uncertainty while completed legacy answers keep their original placement', () => {
+  const ctx = context([
+    row('response', 'christian:three_year', { seat: 'christian', value: 'Keep my completed legacy vision' }),
+    row('response', 'growth:three_year', { seat: 'growth', value: 'Unknown' }),
+    row('response', 'growth:retired_question', { seat: 'growth', value: '<script>retained earlier draft</script>', explanation: 'Keep historical notes', answerStatus: 'draft' }),
+    row('response', 'christian:business_mandate', { seat: 'christian', value: '', explanation: '' }),
+  ]);
+  const html = exportBusinessPlan(ctx), appendix = html.indexOf('id="plan-unfinished-answers"');
+  assert.ok(html.slice(0, appendix).includes('Keep my completed legacy vision'));
+  assert.ok(!html.slice(appendix).includes('Keep my completed legacy vision'));
+  assert.ok(html.slice(appendix).includes('Not sure yet — unresolved'));
+  assert.ok(html.slice(appendix).includes('[response:growth:retired_question]'));
+  assert.ok(html.slice(appendix).includes('&lt;script&gt;retained earlier draft&lt;/script&gt;'));
+  assert.ok(!html.slice(appendix).includes('[response:christian:business_mandate]'), 'Empty unanswered rows do not create an appendix entry');
+  assert.doesNotMatch(html, /<script>/);
+});
+
 test('plan attributes each saved answer and written alternative without treating matching answers as agreements', () => {
   const ctx = context([
     row('response', 'christian:three_year', { seat: 'christian', value: 'Steady maintenance work', respondent_uid: 'christian-user', updatedAt: '2026-10-18' }),
